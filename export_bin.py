@@ -246,6 +246,25 @@ def convert_to_bin(efile, binfile, bsp_dir, opt, ep, centre, bin_copy, game_dir,
             print("\nERROR! I guess BIN file wasn't generated!")
             return 0
         
+def copy_textures(materialDict, copyType, game_dir):
+    if copyType > 0:
+        txt16 = os.path.join(game_dir, "obj", "txt16")
+        for m in materialDict.keys():
+            tex = get_diffuse_texture(bpy.data.materials[m[0]])
+            if tex is not None:
+                img = bpy.data.images[tex]
+                src_path = img.filepath
+                allowCopy = True
+                if copyType == 1: #only allow copying if dest does not exist
+                    dest_file = os.path.join(txt16, os.path.basename(src_path))
+                    if os.path.isfile(dest_file):
+                        print(os.path.join(txt16, os.path.basename(src_path)) + " already exists.")
+                        allowCopy = False
+                if allowCopy:
+                    if not os.path.exists(txt16):
+                        os.makedirs(txt16)
+                    print("copying " + src_path + " to " + txt16)
+                    shutil.copy(src_path, txt16)
 
 def save(operator,
          context, filepath="",
@@ -255,7 +274,8 @@ def save(operator,
          bsp_dir="",
          game_dir_ID = 1,
          game_dir1="", game_dir2="", game_dir3="", game_dir4="", game_dir5="",
-         bsp_optimization=0, ep=0.0, centering=True, bin_copy=True, autodel=False
+         bsp_optimization=0, ep=0.0, centering=True, bin_copy=True, autodel=False,
+         tex_copy="2"
          ):
 
     import mathutils
@@ -379,6 +399,7 @@ def save(operator,
     game_dir = dirs[game_dir_ID -1]
 
     convert_to_bin(efile, filepath, bsp_dir, bsp_optimization, ep, centering, bin_copy, game_dir, autodel)
+    copy_textures(materialDict, int(tex_copy), game_dir)
     print("Export & Conversion time: %.2f" % (time.clock() - time1))
 
     return {'FINISHED'}

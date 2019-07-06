@@ -186,7 +186,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     description="Copy model to obj subfolder")
     autodel: BoolProperty(name="Delete temp files", default=config_from_file["autodel"],
     description="Delete local temporary files.")
-    tex_copy: EnumProperty(name="Copy Textures", items=(("3", "Never", ""), ("2", "Only if not present", ""), ("1", "Always", "")), default="2",
+    tex_copy: EnumProperty(name="Copy Textures", items=(("0", "Never", ""), ("1", "Only if not present", ""), ("2", "Always", "")), default="1",
     description="Copy textures to obj\\txt16. Default = Only when texture isn't already in txt16")
     
     def execute(self, context):
