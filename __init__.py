@@ -57,7 +57,7 @@ default_config = {
 "bsp_dir": "C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop",
 "autodel": False,
 "bin_copy": True,
-"tex_copy": 2
+"tex_copy": 1
 }
 
 config_filename = "Bin_Export.cfg"
