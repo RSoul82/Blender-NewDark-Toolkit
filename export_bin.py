@@ -24,8 +24,9 @@
 
 ######################################################
 
-import os
 import bpy
+import os
+import shutil
 
 if os.name == 'nt':
     convert_exe = '""' + os.path.split(__file__)[0] + os.path.sep + \
@@ -220,11 +221,31 @@ def dummyUV(faceID):
     uv = ",(-1.000000, -1.000000)"
     return str(faceID) + uv + uv + uv + ";"
 
-def convert_to_bin(efile, binfile, opt, ep):
-    bsp = "C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\Workshop\\BSP"
-    command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\" -ep" + str(ep) + " -l" + str(opt) + " -V"
+def convert_to_bin(efile, binfile, bsp_dir, opt, ep, centre, bin_copy, game_dir, autodel):
+    bsp = os.path.join(bsp_dir, "BSP")
+    centString = ""
+    if centre:
+        centString = " -o"
+    command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\" -ep" + str(ep) + " -l" + str(opt) + " -V" + centString
     print("Converting to .bin...")
+    print(command)
     os.system('call ' + command)
+    if bin_copy:
+        obj_dir = os.path.join(game_dir, "obj")
+        if not os.path.exists(obj_dir):
+            os.makedirs(obj_dir)
+        try:
+            shutil.copy(binfile, obj_dir)
+            print(os.path.basename(binfile) + " file copied to obj folder of Thief game.")
+            if autodel:
+                os.remove(efile)
+                os.remove(binfile)
+                print("Temporary files deleted.")
+            return 1
+        except:
+            print("\nERROR! I guess BIN file wasn't generated!")
+            return 0
+        
 
 def save(operator,
          context, filepath="",
@@ -234,7 +255,7 @@ def save(operator,
          bsp_dir="",
          game_dir_ID = 1,
          game_dir1="", game_dir2="", game_dir3="", game_dir4="", game_dir5="",
-         bsp_optimization=0, ep=0.0
+         bsp_optimization=0, ep=0.0, centering=True, bin_copy=True, autodel=False
          ):
 
     import mathutils
@@ -353,8 +374,11 @@ def save(operator,
 
     # Close the file:
     file.close()
+    
+    dirs = [game_dir1, game_dir2, game_dir3, game_dir4, game_dir5]
+    game_dir = dirs[game_dir_ID -1]
 
-    convert_to_bin(efile, filepath, bsp_optimization, ep)
+    convert_to_bin(efile, filepath, bsp_dir, bsp_optimization, ep, centering, bin_copy, game_dir, autodel)
     print("Export & Conversion time: %.2f" % (time.clock() - time1))
 
     return {'FINISHED'}

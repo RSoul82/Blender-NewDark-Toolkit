@@ -19,11 +19,11 @@
 # <pep8 compliant>
 
 bl_info = {
-    "name": "E format",
-    "author": "Tom N Harris, 2.80 update by Robin Collier",
+    "name": "Blender NewDark Toolkit",
+    "author": "Tom N Harris, 2.80 update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir",
     "blender": (2, 80, 0),
     "location": "File > Import-Export",
-    "description": "Import-Export E, meshes, uvs, materials, textures",
+    "description": "Import E files, Export Bin, including textures",
     "warning": "experimental",
 #    "wiki_url": "",
 #    "tracker_url": "",
@@ -56,7 +56,8 @@ default_config = {
 "game_dir5": "",
 "bsp_dir": "C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop",
 "autodel": False,
-"bin_copy": True
+"bin_copy": True,
+"tex_copy": 2
 }
 
 config_filename = "Bin_Export.cfg"
@@ -134,8 +135,17 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     filter_glob: StringProperty(default="*.bin", options={'HIDDEN'})
 
     use_selection: BoolProperty(name="Selection Only", description="Export selected objects only", default=False)
+    centering: BoolProperty(name="Center object", default=config_from_file["centering"], 
+    description="Center your object near its centroid.")
     apply_modifiers: BoolProperty(name="Apply Modifiers", description="Apply modifiers to exported object.", default = True)
+    game_dir_ID: IntProperty(default=1, name="Game Dir No.", min=1, max=5, step=1, 
+    description="Which of the following game dirs to export this object to..")
 
+    bsp_optimization: IntProperty(default=0, name="BSP Optimization", min=0, max=3, step=1, 
+    description="BSP Optimization levels (0 recommended)")
+    ep: FloatProperty(default=0.0, name="Poly Merge Epsilon", 
+    description="Change this if you have problems with small gaps in the model caused by triangle merging (0.0 recommended)")
+    
     axis_forward: EnumProperty(
             name="Forward",
             items=(('X', "X Forward", ""),
@@ -160,14 +170,8 @@ class ExportBin(bpy.types.Operator, ExportHelper):
             default='Z',
             )
     
-    bsp_optimization: IntProperty(default=0, name="BSP Optimization", min=0, max=3, step=1, 
-    description="BSP Optimization levels (0 recommended)")
-    ep: FloatProperty(default=0.0, name="Poly Merge Epsilon", 
-    description="Change this if you have problems with small gaps in the model caused by triangle merging (0.0 recommended)")
     bsp_dir: StringProperty(default=tryConfig('bsp_dir', config_from_file), name="BSP Dir", 
     description="Folder containing BSP.exe")
-    game_dir_ID: IntProperty(default=1, name="Game Dir No.", min=1, max=5, step=1, 
-    description="Which of the following game dirs to export this object to..")
     game_dir1: StringProperty(default=tryConfig('game_dir1', config_from_file), name="Game Dir 1", 
     description="Folder containing Thief/Thief2/Shock2/Dromed.exe etc")
     game_dir2: StringProperty(default=tryConfig('game_dir2', config_from_file), name="Game Dir 2", 
@@ -178,6 +182,12 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     description="(Optional) Alternate folder containing Thief/Thief2/Shock2/Dromed.exe etc")
     game_dir5: StringProperty(default=tryConfig('game_dir5', config_from_file), name="Game Dir 5", 
     description="(Optional) Alternate folder containing Thief/Thief2/Shock2/Dromed.exe etc")
+    bin_copy: BoolProperty(name="Bin Copy", default=config_from_file["bin_copy"],
+    description="Copy model to obj subfolder")
+    autodel: BoolProperty(name="Delete temp files", default=config_from_file["autodel"],
+    description="Delete local temporary files.")
+    tex_copy: EnumProperty(name="Copy Textures", items=(("3", "Never", ""), ("2", "Only if not present", ""), ("1", "Always", "")), default="2",
+    description="Copy textures to obj\\txt16. Default = Only when texture isn't already in txt16")
     
     def execute(self, context):
         from . import export_bin
