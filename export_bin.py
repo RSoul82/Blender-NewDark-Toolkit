@@ -275,7 +275,7 @@ def save(operator,
          game_dir_ID = 1,
          game_dir1="", game_dir2="", game_dir3="", game_dir4="", game_dir5="",
          bsp_optimization=0, ep=0.0, centering=True, bin_copy=True, autodel=False,
-         tex_copy="2"
+         tex_copy="1"
          ):
 
     import mathutils
@@ -398,8 +398,12 @@ def save(operator,
     dirs = [game_dir1, game_dir2, game_dir3, game_dir4, game_dir5]
     game_dir = dirs[game_dir_ID -1]
 
-    convert_to_bin(efile, filepath, bsp_dir, bsp_optimization, ep, centering, bin_copy, game_dir, autodel)
-    copy_textures(materialDict, int(tex_copy), game_dir)
-    print("Export & Conversion time: %.2f" % (time.clock() - time1))
+    result = convert_to_bin(efile, filepath, bsp_dir, bsp_optimization, ep, centering, bin_copy, game_dir, autodel)
+    if result == 1:
+        copy_textures(materialDict, int(tex_copy), game_dir)
+        print("Export & Conversion time: %.2f" % (time.clock() - time1))
+        operator.report({'INFO'}, 'Done')
+    else:
+        operator.report({'ERROR'}, 'Error writing BIN file!')
 
     return {'FINISHED'}
