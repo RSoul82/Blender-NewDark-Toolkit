@@ -49,11 +49,7 @@ default_config = {
 "bsp_optimization": 0,
 "centering": True,
 "selection_only": False,
-"game_dir1": "C:\\Games\\Thief2",
-"game_dir2": "",
-"game_dir3": "",
-"game_dir4": "",
-"game_dir5": "",
+"game_dirs": "C:\\Games\\Thief2",
 "bsp_dir": "C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop",
 "autodel": False,
 "bin_copy": True,
@@ -138,8 +134,6 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     centering: BoolProperty(name="Center object", default=config_from_file["centering"], 
     description="Center your object near its centroid.")
     apply_modifiers: BoolProperty(name="Apply Modifiers", description="Apply modifiers to exported object.", default = True)
-    game_dir_ID: IntProperty(default=1, name="Game Dir No.", min=1, max=5, step=1, 
-    description="Which of the following game dirs to export this object to..")
 
     bsp_optimization: IntProperty(default=0, name="BSP Optimization", min=0, max=3, step=1, 
     description="BSP Optimization levels (0 recommended)")
@@ -172,16 +166,17 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     
     bsp_dir: StringProperty(default=tryConfig('bsp_dir', config_from_file), name="BSP Dir", 
     description="Folder containing BSP.exe")
-    game_dir1: StringProperty(default=tryConfig('game_dir1', config_from_file), name="Game Dir 1", 
-    description="Folder containing Thief/Thief2/Shock2/Dromed.exe etc")
-    game_dir2: StringProperty(default=tryConfig('game_dir2', config_from_file), name="Game Dir 2", 
-    description="(Optional) Alternate folder containing Thief/Thief2/Shock2/Dromed.exe etc")
-    game_dir3: StringProperty(default=tryConfig('game_dir3', config_from_file), name="Game Dir 3", 
-    description="(Optional) Alternate folder containing Thief/Thief2/Shock2/Dromed.exe etc")
-    game_dir4: StringProperty(default=tryConfig('game_dir4', config_from_file), name="Game Dir 4", 
-    description="(Optional) Alternate folder containing Thief/Thief2/Shock2/Dromed.exe etc")
-    game_dir5: StringProperty(default=tryConfig('game_dir5', config_from_file), name="Game Dir 5", 
-    description="(Optional) Alternate folder containing Thief/Thief2/Shock2/Dromed.exe etc")
+    
+    #generate game dirs list
+    gDirsString = tryConfig('game_dirs', config_from_file)
+    split = gDirsString.split(";")
+    enum_dirs = []
+    game_dirs = []
+    for i in range(0, len(split)):
+        enum_dirs.append((str(i), split[i].strip(), ""))
+        game_dirs.append(split[i].strip())
+    
+    game_dir_ID: EnumProperty(name="Game Dir", items = enum_dirs, description="Folder containing Thief/Thief2.exe, Dromed.exe, Shock2.exe etc. Separate multiple with a semicolon")
     bin_copy: BoolProperty(name="Bin Copy", default=config_from_file["bin_copy"],
     description="Copy model to obj subfolder")
     autodel: BoolProperty(name="Delete temp files", default=config_from_file["autodel"],
@@ -195,6 +190,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "check_existing"))
         global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4()
         keywords["global_matrix"] = global_matrix
+        keywords["game_dirs"] = self.game_dirs #this is needed to get pass the array items to the export class
 
         return export_bin.save(self, context, **keywords)
 
