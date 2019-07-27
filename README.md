@@ -6,9 +6,11 @@ This allows Blender 2.8 to import .e files and export .bin files. The latter is 
 ## Installation
 Use the **Clone or Download** button and slect **Download as ZIP File**
 
-In Blender, go to Edit > Preferences > Install...
+In Blender, go to Edit > Preferences > Install:<br />
+![](BlenderNDToolkit/Install.jpg)
 
-Enable the addon, and at the bottom left check that Auto Save Preferences is eanbled. If not, use the Save button to remember the setting...
+Enable the addon, and at the bottom left check that Auto Save Preferences is eanbled. If not, use the Save button to remember the setting:<br />
+![](BlenderNDToolkit/EnableAndSave.jpg)
 
 ## Setup
 Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\2.80\config\scripts) and open **Bin_Export.cfg**.
@@ -23,11 +25,12 @@ __Blender must be restarted for the changes to take effect__<br />
 - **bin_copy**: true or false
 - **bsp_dir**: Path surrounded by "s. Use \\\ rather than just \\ to separate each part of a path.
 - **bsp_optimization**: 0 - 3
-- **game_dirs**: Multiple paths should be separated by a semicolon (and use \\\ rather than \\). Example: "C:\\\Games\\\Thief2;C:\\\Games\\\Shock2"
+- **game_dirs**: Multiple paths should be separated by a semicolon (and use \\\ rather than \\). Example: "C:\\\Games\\\Thief2;C:\\\Games\\\Shock2":<br />
+![](BlenderNDToolkit/MultipleGameDirs.jpg)
 - **centering**: true or false
 - **selection_only**: true or false
 - **tex_copy**: 0, 1 or 2, which correspond with menu the menu items you see during Export<br />
-![Tex copy](Blender toolkit 2.8 screenshots/CopyTexOptions.jpg)
+![](BlenderNDToolkit/CopyTexOptions.jpg)
 
 ## Using the addon
 
