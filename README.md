@@ -66,6 +66,6 @@ Go to File > Export > Bin File. No need to navigate to your obj folder (file cop
 **Delete temp files**: Before copying, the .bin file is created in the same folder the Blender object is saved in. This option deletes it when the copying is finished. Don't select this if **Bin Copy** is unselected otherwise you won't get any export file.
 
 **Copy Texutres**:
-- Always (textures will be copied to obj\txt16 and existing files will be overwritten)
-- Only if not present (existing files won't be overwritten - this is recommended because an existing object may use a texture that has the same but that looks vrey different to the one for your object. When you see your object in game, you'll see that it looks different, so you'll be able to rename the texture and export again).
-- Never (useful if your object is only using stock textures)
+- **Always** (textures will be copied to obj\txt16 and existing files will be overwritten)
+- **Only** if not present (existing files won't be overwritten - this is recommended because an existing object may use a texture that has the same but that looks vrey different to the one for your object. When you see your object in game, you'll see that it looks different, so you'll be able to rename the texture and export again).
+- **Never** (useful if your object is only using stock textures)
