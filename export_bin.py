@@ -221,21 +221,51 @@ def dummyUV(faceID):
     uv = ",(-1.000000, -1.000000)"
     return str(faceID) + uv + uv + uv + ";"
 
-def convert_to_bin(efile, binfile, bsp_dir, opt, ep, centre, bin_copy, game_dir, autodel):
+def get_args(mesh_type, dir):
+    print("dir: " + dir)
+    args = {
+    "apparition": "\"" + os.path.join(dir, "appa.map") + "\" -m\"" + os.path.join(dir, "appa.mjo") + "\" -V",
+    "arm": "\"" + os.path.join(dir, "arm.map") + "\" -m\"" + os.path.join(dir, "arm.mjo") + "\" -V",
+    "bowarm": "\"" + os.path.join(dir, "flexbow.map") + "\" -m\"" + os.path.join(dir, "flexbow.mjo") + "\" -V",
+    "bugbeast": "\"" + os.path.join(dir, "bugbeast.map") + "\" -m\"" + os.path.join(dir, "bugbeast.mjo") + "\" -c\"" + os.path.join(dir, "manbase.cal") + "\" -V",
+    "burrick": "\"" + os.path.join(dir, "burrick.map") + "\" -m\"" + os.path.join(dir, "burrick.mjo") + "\" -c\"" + os.path.join(dir, "burrbase.cal") + "\" -V",
+    "constantine": "\"" + os.path.join(dir, "constant.map") + "\" -m\"" + os.path.join(dir, "constant.mjo") + "\" -c\"" + os.path.join(dir, "conbase.cal") + "\" -V",
+    "crayman": "\"" + os.path.join(dir, "crayman.map") + "\" -m\"" + os.path.join(dir, "crayman.mjo") + "\" -c\"" + os.path.join(dir, "manbase.cal") + "\" -V",
+    "deadburrick": "\"" + os.path.join(dir, "burrick.map") + "\" -m\"" + os.path.join(dir, "burrick.mjo") + "\" -V",
+    "droid": "\"" + os.path.join(dir, "droid.map") + "\" -m\"" + os.path.join(dir, "droid.mjo") + "\" -V",
+    "frog": "\"" + os.path.join(dir, "burrick.map") + "\" -m\"" + os.path.join(dir, "burrick.mjo") + "\" -c\"" + os.path.join(dir, "burrbase.cal") + "\" -V",
+    "humanoid": "\"" + os.path.join(dir, "biped.map") + "\" -m\"" + os.path.join(dir, "biped.mjo") + "\" -c\"" + os.path.join(dir, "manbase.cal") + "\" -V",
+    "rope": "\"" + os.path.join(dir, "rope.map") + "\" -V",
+    "simple": "\"" + os.path.join(dir, "simple.map") + "\" -V",
+    "spider": "\"" + os.path.join(dir, "spidey.map") + "\" -m\"" + os.path.join(dir, "spidey.mjo") + "\" -V",
+    "sweel": "\"" + os.path.join(dir, "sweel.map") + "\" -m\"" + os.path.join(dir, "sweel.mjo") + "\" -V"
+    }
+    return args[mesh_type]
+
+def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type):
     bsp = os.path.join(bsp_dir, "BSP")
+    mshbld = os.path.join(bsp_dir, "MESHBLD")
     centString = ""
     if centre:
         centString = " -o"
-    command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\" -ep" + str(ep) + " -l" + str(opt) + " -V" + centString
+    if not ai_mesh:
+        command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\" -ep" + str(ep) + " -l" + str(opt) + " -V" + centString
+    else:
+        arg_string = get_args(mesh_type, bsp_dir)
+        command = "\"" + mshbld + "\" \"" + efile + "\" \"" + binfile + "\" " + arg_string
+        print(command)
     print("Converting to .bin...")
-    print(command)
     os.system('call ' + command)
     if bin_copy:
         obj_dir = os.path.join(game_dir, "obj")
+        if ai_mesh:
+            obj_dir = os.path.join(game_dir, "mesh")
         if not os.path.exists(obj_dir):
             os.makedirs(obj_dir)
         try:
             shutil.copy(binfile, obj_dir)
+            if ai_mesh:
+                shutil.copy(binfile, obj_dir)
             print(os.path.basename(binfile) + " file copied to obj folder of Thief game.")
             if autodel:
                 os.remove(efile)
@@ -246,25 +276,28 @@ def convert_to_bin(efile, binfile, bsp_dir, opt, ep, centre, bin_copy, game_dir,
             print("\nERROR! I guess BIN file wasn't generated!")
             return 0
         
-def copy_textures(materialDict, copyType, game_dir):
+def copy_textures(materialDict, copyType, game_dir, ai_mesh):
     if copyType > 0:
         txt16 = os.path.join(game_dir, "obj", "txt16")
+        if ai_mesh:
+            txt16 = os.path.join(game_dir, "mesh", "txt16")
         for m in materialDict.keys():
-            tex = get_diffuse_texture(bpy.data.materials[m[0]])
-            if tex is not None:
-                img = bpy.data.images[tex]
-                src_path = img.filepath
-                allowCopy = True
-                if copyType == 1: #only allow copying if dest does not exist
-                    dest_file = os.path.join(txt16, os.path.basename(src_path))
-                    if os.path.isfile(dest_file):
-                        print(os.path.join(txt16, os.path.basename(src_path)) + " already exists.")
-                        allowCopy = False
-                if allowCopy:
-                    if not os.path.exists(txt16):
-                        os.makedirs(txt16)
-                    print("copying " + src_path + " to " + txt16)
-                    shutil.copy(src_path, txt16)
+            if not bpy.data.materials[m[0]].get("NoCopy") or bpy.data.materials[m[0]].get("NoCopy") == 0.0:
+                tex = get_diffuse_texture(bpy.data.materials[m[0]])
+                if tex is not None:
+                    img = bpy.data.images[tex]
+                    src_path = bpy.path.abspath(img.filepath)
+                    allowCopy = True
+                    if copyType == 1: #only allow copying if dest does not exist
+                        dest_file = os.path.join(txt16, os.path.basename(src_path))
+                        if os.path.isfile(dest_file):
+                            print(os.path.join(txt16, os.path.basename(src_path)) + " already exists.")
+                            allowCopy = False
+                    if allowCopy:
+                        if not os.path.exists(txt16):
+                            os.makedirs(txt16)
+                        print("copying " + src_path + " to " + txt16)
+                        shutil.copy(src_path, txt16)
 
 def save(operator,
          context, filepath="",
@@ -275,7 +308,9 @@ def save(operator,
          game_dirs=[],
          game_dir_ID=0,
          bsp_optimization=0, ep=0.0, centering=True, bin_copy=True, autodel=False,
-         tex_copy="1"
+         tex_copy="1",
+         ai_mesh=False,
+         mesh_type='humanoid'
          ):
 
     import mathutils
@@ -290,6 +325,7 @@ def save(operator,
 
     # Open the file for writing:
     efile = filepath.replace(".bin", ".e")
+    calfile = filepath.replace(".bin", ".cal") # for AI only, but may as well generate it
     file = open(efile, 'w', encoding='ascii')
 
     file.write("""COMMENT{{
@@ -398,9 +434,9 @@ def save(operator,
     game_dir = game_dirs[int(game_dir_ID)]
 
     if os.path.exists(game_dir):
-        result = convert_to_bin(efile, filepath, bsp_dir, bsp_optimization, ep, centering, bin_copy, game_dir, autodel)
+        result = convert_to_bin(efile, filepath, calfile, bsp_dir, bsp_optimization, ep, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type)
         if result == 1:
-            copy_textures(materialDict, int(tex_copy), game_dir)
+            copy_textures(materialDict, int(tex_copy), game_dir, ai_mesh)
             print("Export & Conversion time: %.2f" % (time.clock() - time1))
             operator.report({'INFO'}, 'Done')
         else:

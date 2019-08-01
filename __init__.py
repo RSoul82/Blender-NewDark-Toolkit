@@ -46,11 +46,12 @@ from bpy.props import StringProperty, FloatProperty, BoolProperty, EnumProperty,
 from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 
 default_config = {
+"ai_mesh": False,
 "bsp_optimization": 0,
 "centering": True,
 "selection_only": False,
 "game_dirs": "C:\\Games\\Thief2",
-"bsp_dir": "C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop",
+"bsp_meshbld_dir": "C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop",
 "autodel": False,
 "bin_copy": True,
 "tex_copy": 1
@@ -164,8 +165,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
             default='Z',
             )
     
-    bsp_dir: StringProperty(default=tryConfig('bsp_dir', config_from_file), name="BSP Dir", 
-    description="Folder containing BSP.exe")
+    bsp_dir: StringProperty(default=tryConfig('bsp_meshbld_dir', config_from_file), name="BSP/MeshBld Dir", description="Folder containing BSP.exe and/or MeshBld.exe")
     
     #generate game dirs list
     gDirsString = tryConfig('game_dirs', config_from_file)
@@ -183,6 +183,27 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     description="Delete local temporary files.")
     tex_copy: EnumProperty(name="Copy Textures", items=(("0", "Never", ""), ("1", "Only if not present", ""), ("2", "Always", "")), default="1",
     description="Copy textures to obj\\txt16. Default = Only when texture isn't already in txt16")
+    ai_mesh: BoolProperty(name="AI Mesh", description="Use MeshBld and a .cal file (see below) to export to the mesh folder.", default=False)
+    mesh_type: EnumProperty(
+            name="MeshType",
+            items=(('apparition', "Apparation", ""),
+                   ('arm', "Arm", ""),
+                   ('bowarm', "Bow Arm", ""),
+                   ('bugbeast', "Bug Beast", ""),
+                   ('burrick', "Burrick", ""),
+                   ('constantine', "Constantine", ""),
+                   ('crayman', "Crayman", ""),
+                   ('deadburrick', "Dead Burrick", ""),
+                   ('droid', "Droid", ""),
+                   ('frog', "Frog", ""),
+                   ('humanoid', "Humanoid", ""),
+                   ('rope', "Rope", ""),
+                   ('simple', "Simple", ""),
+                   ('spider', "Spider", ""),
+                   ('sweel', "Sweel", ""),
+                   ),
+            default='humanoid',
+            )
     
     def execute(self, context):
         from . import export_bin
