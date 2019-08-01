@@ -1,7 +1,12 @@
 # Blender-NewDark-Toolkit
 Update to Telliamed's Blender Toolkit for .e files (see [the original version](https://www.ttlg.com/forums/showthread.php?t=136431) for motion tools). This now exports .bin files (path to BSP.exe required), and images are now only converted during import (to make them Blender compatible). The code for .bin export has been adapted from the Elendir's Dark Exporter 2 addon.
 
-This allows Blender 2.8 to import .e files and export .bin files. The latter is achieved using the LGS tool "**BSP.exe**" which should come with any typical DromEd installation or toolkit.
+This addon does three things:
+- Import .e files
+- Export .bin files for objects (uses **BSP.exe**)
+- Export .bin and .cal files for AI meshes (uses **MeshBld.exe**)
+
+The objects textures can be copied to the /txt16 folder, but you can choose the conditions and make exceptions.
 
 ## Installation
 Use the **Clone or Download** button and slect **Download as ZIP File**
@@ -11,26 +16,6 @@ In Blender, go to Edit > Preferences > Install:<br />
 
 Enable the addon, and at the bottom left check that Auto Save Preferences is eanbled. If not, use the Save button to remember the setting:<br />
 ![](BlenderNDToolkit/EnableAndSave.jpg)
-
-## Setup
-Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\2.80\config\scripts) and open **Bin_Export.cfg**.
-
-There are several things to set up to allow the addon to work and be easy to use. In most cases it's clear which export option each varaible refers to, so this section just states valid values. All the options are all explained fully in the **Export** section of this readme.
-
-**__NOTE THE FORMAT OF EACH DEFAULT VARIABLE BEFORE MAKING CHANGES__**<br />
-__Also note that the final variable does not end with a ,__<br />
-__Blender must be restarted for the changes to take effect__<br />
-
-- **autodel**: true or false
-- **bin_copy**: true or false
-- **bsp_dir**: Path surrounded by "s. Use \\\ rather than just \\ to separate each part of a path.
-- **bsp_optimization**: 0 - 3
-- **game_dirs**: Multiple paths should be separated by a semicolon (and use \\\ rather than \\). Example: "C:\\\Games\\\Thief2;C:\\\Games\\\Shock2":<br />
-![](BlenderNDToolkit/MultipleGameDirs.jpg)
-- **centering**: true or false
-- **selection_only**: true or false
-- **tex_copy**: 0, 1 or 2, which correspond with menu the menu items you see during Export<br />
-![](BlenderNDToolkit/CopyTexOptions.jpg)
 
 ## Using the addon
 
@@ -69,3 +54,32 @@ Go to File > Export > Bin File. No need to navigate to your obj folder (file cop
 - **Always** (textures will be copied to obj\txt16 and existing files will be overwritten)
 - **Only if not present** (existing files won't be overwritten - this is recommended because an existing object may use a texture that has the same but that looks vrey different to the one for your object. When you see your object in game, you'll see that it looks different, so you'll be able to rename the texture and export again).
 - **Never** (useful if your object is only using stock textures)
+- A useful feature if you're using a mixture of stock and new textures:<br/>
+  - Choose one of the first two options (i.e. so that textures may be copied)
+  - For an texture you **don't** want to be copied, edit its ***Material***, add "Custom Property" called **NoCopy**. A value other than 0 will prevent the texture from being copied to /txt16.<br/>
+![](BlenderNDToolkit/NoCopy.jpg)
+  
+
+**AI Mesh**
+Creates an AI mesh (which will require limit planes and joint boxes) and saves it to **mesh** instead of **obj**. The menu below is for selecting the type of mesh. Humanoid will be the most common, so that's the default.
+
+
+## Setup
+Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\2.80\config\scripts) and open **Bin_Export.cfg**.
+
+There are several things to set up to allow the addon to work and be easy to use. In most cases it's clear which export option each varaible refers to, so this section just states valid values. All the options are all explained fully in the **Export** section of this readme.
+
+**__NOTE THE FORMAT OF EACH DEFAULT VARIABLE BEFORE MAKING CHANGES__**<br />
+__Also note that the final variable does not end with a ,__<br />
+__Blender must be restarted for the changes to take effect__<br />
+
+- **autodel**: true or false
+- **bin_copy**: true or false
+- **bsp_dir**: Path surrounded by "s. Use \\\ rather than just \\ to separate each part of a path.
+- **bsp_optimization**: 0 - 3
+- **game_dirs**: Multiple paths should be separated by a semicolon (and use \\\ rather than \\). Example: "**C:\\\Games\\\Thief2;C:\\\Games\\\Shock2**" will give you this menu:<br />
+![](BlenderNDToolkit/MultipleGameDirs.jpg)
+- **centering**: true or false
+- **selection_only**: true or false
+- **tex_copy**: 0, 1 or 2, which correspond with menu the menu items you see during Export<br />
+![](BlenderNDToolkit/CopyTexOptions.jpg)
