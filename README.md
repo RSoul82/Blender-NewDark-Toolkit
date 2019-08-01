@@ -64,10 +64,10 @@ Go to File > Export > Bin File. No need to navigate to your obj folder (file cop
 Creates an AI mesh (which will require limit planes and joint boxes) and saves it to **mesh** instead of **obj**. The menu below is for selecting the type of mesh. Humanoid will be the most common, so that's the default.
 
 
-## Setup
-Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\2.80\config\scripts) and open **Bin_Export.cfg**.
-
+## Setting Default Values
 There are several things to set up to allow the addon to work and be easy to use. In most cases it's clear which export option each varaible refers to, so this section just states valid values. All the options are all explained fully in the **Export** section of this readme.
+
+Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\2.80\config\scripts) and open **Bin_Export.cfg**.
 
 **__NOTE THE FORMAT OF EACH DEFAULT VARIABLE BEFORE MAKING CHANGES__**<br />
 __Also note that the final variable does not end with a ,__<br />
