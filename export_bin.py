@@ -221,6 +221,7 @@ def dummyUV(faceID):
     uv = ",(-1.000000, -1.000000)"
     return str(faceID) + uv + uv + uv + ";"
 
+#Command line args for MeshBld
 def get_args(mesh_type, dir):
     print("dir: " + dir)
     args = {
@@ -234,7 +235,7 @@ def get_args(mesh_type, dir):
     "deadburrick": "\"" + os.path.join(dir, "burrick.map") + "\" -m\"" + os.path.join(dir, "burrick.mjo") + "\" -V",
     "droid": "\"" + os.path.join(dir, "droid.map") + "\" -m\"" + os.path.join(dir, "droid.mjo") + "\" -V",
     "frog": "\"" + os.path.join(dir, "burrick.map") + "\" -m\"" + os.path.join(dir, "burrick.mjo") + "\" -c\"" + os.path.join(dir, "burrbase.cal") + "\" -V",
-    "humanoid": "\"" + os.path.join(dir, "biped.map") + "\" -m\"" + os.path.join(dir, "biped.mjo") + "\" -c\"" + os.path.join(dir, "manbase.cal") + "\" -V",
+    "humanoid": "\"" + os.path.join(dir, "biped.map") + "\" -m\"" + os.path.join(dir, "bipednw.mjo") + "\" -c\"" + os.path.join(dir, "manbase.cal") + "\" -V",
     "rope": "\"" + os.path.join(dir, "rope.map") + "\" -V",
     "simple": "\"" + os.path.join(dir, "simple.map") + "\" -V",
     "spider": "\"" + os.path.join(dir, "spidey.map") + "\" -m\"" + os.path.join(dir, "spidey.mjo") + "\" -V",
@@ -265,11 +266,13 @@ def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, ep, centre, bin_copy, 
         try:
             shutil.copy(binfile, obj_dir)
             if ai_mesh:
-                shutil.copy(binfile, obj_dir)
+                shutil.copy(calfile, obj_dir)
             print(os.path.basename(binfile) + " file copied to obj folder of Thief game.")
             if autodel:
                 os.remove(efile)
                 os.remove(binfile)
+                if(ai_mesh):
+                    os.remove(calfile)
                 print("Temporary files deleted.")
             return 1
         except:
