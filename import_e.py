@@ -501,42 +501,36 @@ def convert_image_format(filepath):
         return convpath
     return filepath
 
+#Ensures a path is absolute rather than relative
+def pathToAbs(pathToSet):
+    if pathToSet.startswith('..'):
+        raise ValueError("Refusing to operate on path '{0}'".format(pathToSet))
+    elif pathToSet != '':
+        return os.path.abspath(bpy.path.abspath(os.path.expanduser(pathToSet)))
+    else:
+        return ''
 
 def load_image_recursive(texName, dirname, use_recursive=False):
-    from bpy_extras.image_utils import load_image
+    from bpy_extras.image_utils import load_image 
     #see if the filename ends with an extension, i.e. length - 4 is a .
     if texName[len(texName)-4] == ".":
         texName = texName[:-4]
     
     extensions = [".dds", ".png", ".tga", ".bmp", ".gif", ".pcx", ".jpg"]
     
-    for ext in extensions:
+    for ext in extensions:        
         filepath = texName + ext
-        texIndex = getTexIndex(filepath)
         #assign texture to material
-        #if image is already loaded, use it, or load it as a new image
-        if texIndex != -1:
-            img = bpy.data.images[texIndex]
-        else:
-            img = load_image(filepath, dirname, convert_callback=convert_image_format)
-            #print(img)
+        img = load_image(filepath, dirname, recursive=use_recursive, convert_callback=convert_image_format, check_existing=True)
         
-        if img or not use_recursive:
+        if img:
             return img #stops this loop/method
 
-        #continue by searching in the local dir's subdirs
-        from os.path import join, isfile
-        filename = os.path.basename(filepath) #filename only
-        for direntry in os.listdir(dirname): #all filenames in dirname or user prefs tex dir
-            filepath = join(dirname, direntry, filename) #join current dir and filename in .e file
-            if isfile(filepath): #if above file exists, load it
-                img = load_image(filepath, None, convert_callback=convert_image_format)
-                if img:
-                    return img
-
         #if not found in local subdirs, look in the user's user preferences textures dir (and subdirs)
+        filename = os.path.basename(filepath) #filename only
         userPrefTexDir = bpy.context.preferences.filepaths.texture_directory #user preferences textures directory
         if userPrefTexDir != '':
+            from os.path import join, isfile
             userTexs = [] #include root dir
             userTexs.append(userPrefTexDir)#add all files and subdirs
             for texDirentry in os.listdir(userPrefTexDir):
