@@ -108,7 +108,7 @@ def make_material_str(i, material, image, operator):
         #custom properties required instead
         illum = material.get("ILLUM")
         if illum:
-            mat_str.append("ILLUM "+ str(check0to100("TRANSP", transp, material, operator)))
+            mat_str.append("ILLUM "+ str(check0to100("ILLUM", illum, material, operator)))
 
         transp = material.get("TRANSP")
         if transp:
