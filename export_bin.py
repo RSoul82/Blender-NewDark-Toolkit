@@ -70,7 +70,7 @@ def get_material_colour(material):
     c = shaderNode.inputs[0].default_value
     return((c[0], c[1], c[2]))
 
-def make_material_str(i, material, image, operator):
+def make_material_str(i, material, image, operator, ai_mesh):
     '''Make a material chunk out of a blender material.'''
 
     material= bpy.data.materials[material.name] #get all custom property values up to date
@@ -106,9 +106,10 @@ def make_material_str(i, material, image, operator):
         
         #2.80 material.emit does not exist, neither does material.use_transparency
         #custom properties required instead
-        illum = material.get("ILLUM")
-        if illum:
-            mat_str.append("ILLUM "+ str(check0to100("ILLUM", illum, material, operator)))
+        if not ai_mesh:
+            illum = material.get("ILLUM")
+            if illum:
+                mat_str.append("ILLUM "+ str(check0to100("ILLUM", illum, material, operator)))
 
         transp = material.get("TRANSP")
         if transp:
@@ -162,12 +163,13 @@ def make_face_str(num, face, uv_tex, vert_map, materials, materialDict):
 
 
 #from obj exporter
-def mesh_triangulate(me):
+def mesh_triangulate(me, ai_mesh):
     import bmesh
     bm = bmesh.new()
     bm.from_mesh(me)
     bmesh.ops.triangulate(bm, faces=bm.faces)
-    #bmesh.ops.split_edges(bm, edges=bm.edges)  
+    if ai_mesh:
+        bmesh.ops.split_edges(bm, edges=bm.edges)#required to allow multiple materials on adjoining faces.
     bm.to_mesh(me)
     bm.free()
 
@@ -364,7 +366,7 @@ def save(operator,
 
         try:
             data = ob_for_convert.to_mesh()
-            mesh_triangulate(data)
+            mesh_triangulate(data, ai_mesh)
         except:
             data = None
         
@@ -396,7 +398,7 @@ def save(operator,
     # Make material chunks for all materials used in the meshes:
     file.write("MATERIALS{\n")
     for num, mat, image in materialDict.values():
-        file.write(make_material_str(num, mat, image, operator))
+        file.write(make_material_str(num, mat, image, operator, ai_mesh))
     file.write("}\n\n")
 
     # Create object chunks for all meshes:
