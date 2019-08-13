@@ -248,6 +248,8 @@ def get_args(mesh_type, dir):
 def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type):
     bsp = os.path.join(bsp_dir, "BSP")
     mshbld = os.path.join(bsp_dir, "MESHBLD")
+    meshUp = os.path.join(bsp_dir, "MeshUp")
+    matTweak = os.path.join(bsp_dir, "MatTweak")
     centString = ""
     if centre:
         centString = " -o"
@@ -256,9 +258,15 @@ def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, ep, centre, bin_copy, 
     else:
         arg_string = get_args(mesh_type, bsp_dir)
         command = "\"" + mshbld + "\" \"" + efile + "\" \"" + binfile + "\" " + arg_string
-        print(command)
+        v2mesh = binfile.replace(".bin", "2.bin")
+        meshUpCmd = "\"" + meshUp + "\" \"" + binfile + "\" \"" + v2mesh + "\""
     print("Converting to .bin...")
-    os.system('call ' + command)
+    os.system('call ' + command) #basic object conversion command
+    if ai_mesh:
+        if os.path.isfile(meshUp + ".exe"):
+            os.system('call ' + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
+            os.remove(binfile) #remove original bin file
+            os.system('call rename ' + v2mesh + ' ' + os.path.basename(v2mesh).replace("2.bin", ".bin")) #rename new bin file to original filename
     if bin_copy:
         obj_dir = os.path.join(game_dir, "obj")
         if ai_mesh:
