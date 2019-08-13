@@ -249,7 +249,6 @@ def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, ep, centre, bin_copy, 
     bsp = os.path.join(bsp_dir, "BSP")
     mshbld = os.path.join(bsp_dir, "MESHBLD")
     meshUp = os.path.join(bsp_dir, "MeshUp")
-    matTweak = os.path.join(bsp_dir, "MatTweak")
     centString = ""
     if centre:
         centString = " -o"
