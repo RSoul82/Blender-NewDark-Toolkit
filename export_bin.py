@@ -111,11 +111,11 @@ def make_material_str(i, material, image, operator, ai_mesh):
             if illum:
                 mat_str.append("ILLUM "+ str(check0to100("ILLUM", illum, material, operator)))
 
-        transp = material.get("TRANSP")
-        if transp:
-            mat_str.append("TRANSP "+ str(check0to100("TRANSP", transp, material, operator)))
-        else:
-            mat_str.append("TRANSP 0")
+            transp = material.get("TRANSP")
+            if transp:
+                mat_str.append("TRANSP "+ str(check0to100("TRANSP", transp, material, operator)))
+            else:
+                mat_str.append("TRANSP 0")
 
     return ",".join(mat_str) + ";\n"
 
@@ -143,9 +143,8 @@ def check0to100(propName, value, material, operator):
     return result
 
 def make_vertex_str(vertex):
-    #return ",".join([format(co, ".6f") for co in vertex.co]) + ";\n"
-    return ",".join(str(round(co, 6)) for co in vertex.co) + ";\n"
-    #return ",".join(str(co) for co in vertex.co) + ";\n"
+    return ",".join([format(co, ".6f") for co in vertex.co]) + ";\n" #required to format v. small numbers in original format, e.g. 0.000002 instead of 2e-6.
+    #return ",".join(str(round(co, 6)) for co in vertex.co) + ";\n"
 
 def make_face_str(num, face, uv_tex, vert_map, materials, materialDict):
     if face.material_index < len(materials):
@@ -156,8 +155,8 @@ def make_face_str(num, face, uv_tex, vert_map, materials, materialDict):
         mat_index = 0 if mat_key not in materialDict else materialDict[mat_key][0]
     else:
         mat_index = 0
-    #point = "(" + ",".join([str(round(co, 6)) for co in face.vertices]) + ")"    
-    point = "(" + ",".join([str(co) for co in face.vertices]) + ")"    
+    point = "(" + ",".join([str(round(co, 6)) for co in face.vertices]) + ")"    
+    #point = "(" + ",".join([str(co) for co in face.vertices]) + ")"    
     
     return "0,N,{},{:>4x},{};\n".format(num, mat_index, point)
 
