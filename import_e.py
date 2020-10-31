@@ -529,7 +529,7 @@ def load_image_recursive(texName, dirname, use_recursive=False):
         #if not found in local subdirs, look in the user's user preferences textures dir (and subdirs)
         filename = os.path.basename(filepath) #filename only
         userPrefTexDir = bpy.context.preferences.filepaths.texture_directory #user preferences textures directory
-        if userPrefTexDir != '':
+        if userPrefTexDir != '' and userPrefTexDir != '//':
             from os.path import join, isfile
             userTexs = [] #include root dir
             userTexs.append(userPrefTexDir)#add all files and subdirs
