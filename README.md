@@ -46,7 +46,7 @@ A bright light would be 100. Consider using lower values for weak lights, such h
 
 #### Transparency
 Name: **TRANSP**, value: 0 - 100<br />
-![](BlenderNDToolkit/IllumValue.jpg)<br />
+![](BlenderNDToolkit/TranspValue.jpg)<br />
 0 = fully opaque (default), 100 = fully transparent.
 
 #### Double Sided
