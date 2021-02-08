@@ -32,23 +32,23 @@ There are two options:<br />
 
 For any custom property got to Add, then Edit and set the following names and values:
 
-## Smooth/sharp shading:
+#### Smooth/sharp shading:
 For smooth shading, name: **SHADER**, value: **PHONG**. It will look like this:<br />
 ![](BlenderNDToolkit/PhongShader.jpg)<br />
 Any other value will cause flat shading to be used. Flat shading will also be used if there is no **SHADER** property.
 
-## Illumination
+#### Illumination
 For glowing materials, name: **ILLUM**, value: 0 - 100. Default is 0<br />
 ![](BlenderNDToolkit/IllumValue.jpg)<br />
 A bright light would be 100. Consider using lower values for weak lights, such has glowing biological things. Brightnesses can be modifed in Dromed using the Renderer > Self Illumination property (decimal, 0 - 1). Not confirmed at time of writing but I think it multiplies all 'ILLUM' material brightness values, up to a point.
 
-## Transparency
+#### Transparency
 Name: **TRANSP**, value: 0 - 100<br />
 ![](BlenderNDToolkit/IllumValue.jpg)<br />
 0 = fully opaque (default), 100 = fully transparent.
 
-## Double Sided
-Not currently implemented, but I'm not sure why.
+#### Double Sided
+Not currently implemented, but I'm not sure why as it looks like 'DBL' just has to be written to the .e file. Planned for an update in the near future!
 
 *Blender materials have many properties of their own but very few could possibly correspond to Dark Engine material properties. And different shader types have different properties, so it was decided for consistency and simplicity to use Custom Properties for everything to keep things in one place.
 
