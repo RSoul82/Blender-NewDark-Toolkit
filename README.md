@@ -50,7 +50,7 @@ Name: **TRANSP**, value: 0 - 100<br />
 0 = fully opaque (default), 100 = fully transparent.
 
 #### Double Sided
-Name: **DBL**, value: 1.0 or 1
+Name: **DBL**, value: 1.0 or 1<br />
 ![](BlenderNDToolkit/DoubleValue.jpg)<br />
 1.0 or 1 makes the material double sided in game. For any other value, or no DBL property, the material will be single sided.
 
