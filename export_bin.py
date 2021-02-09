@@ -119,7 +119,7 @@ def make_material_str(i, material, image, operator, ai_mesh):
         
         #double sided materials
         dblValue=str(material.get("DBL"))
-        if dblValue == "1.0":
+        if dblValue == "1.0" or dblValue == "1":
             mat_str.append("DBL")
 
     return ",".join(mat_str) + ";\n"
