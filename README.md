@@ -50,7 +50,9 @@ Name: **TRANSP**, value: 0 - 100<br />
 0 = fully opaque (default), 100 = fully transparent.
 
 #### Double Sided
-Not currently implemented, but I'm not sure why as it looks like 'DBL' just has to be written to the .e file. Planned for an update in the near future!
+Name: **DBL**, value: 1.0 or 1
+![](BlenderNDToolkit/DoubleValue.jpg)<br />
+1.0 or 1 makes the material double sided in game. For any other value, or no DBL property, the material will be single sided.
 
 *Blender materials have many properties of their own but very few could possibly correspond to Dark Engine material properties. And different shader types have different properties, so it was decided for consistency and simplicity to use Custom Properties for everything to keep things in one place.
 
