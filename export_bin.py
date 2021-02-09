@@ -20,7 +20,7 @@
 
 # Script copyright (C) Tom N Harris
 # Contributors: Campbell Barton, Bob Holcomb, Richard Lärkäng, Damien McGinnes, Mark Stijnman
-# 2.80 Update by Robin Collier
+# 2.80/2.9x Update by Robin Collier
 
 ######################################################
 
@@ -116,6 +116,11 @@ def make_material_str(i, material, image, operator, ai_mesh):
                 mat_str.append("TRANSP "+ str(check0to100("TRANSP", transp, material, operator)))
             else:
                 mat_str.append("TRANSP 0")
+        
+        #double sided materials
+        dblValue=str(material.get("DBL"))
+        if dblValue == "1.0":
+            mat_str.append("DBL")
 
     return ",".join(mat_str) + ";\n"
 
@@ -332,7 +337,7 @@ def save(operator,
 
     # Time the export
     time1 = time.clock()
-#	Blender.Window.WaitCursor(1)
+#   Blender.Window.WaitCursor(1)
 
     # Open the file for writing:
     efile = filepath.replace(".bin", ".e")
@@ -340,7 +345,7 @@ def save(operator,
     file = open(efile, 'w', encoding='ascii')
 
     file.write("""COMMENT{{
-//	Exported by Blender {0} from {1}
+//  Exported by Blender {0} from {1}
 }}
 
 """.format(bpy.app.version_string, bpy.path.display_name(bpy.data.filepath)))
@@ -396,10 +401,11 @@ def save(operator,
                     
                     materialDict.setdefault((mName, texName), (len(materialDict)+1, material, texImage))
             else:
-                eMsg = "\"" + ob.name + "\" has no materials."
-                print(eMsg)
-                operator.report({'ERROR'}, ob.name + " has no materials.")
-                return{'CANCELLED'}
+                if not ob.name.startswith("@x") and not ob.name.startswith("@z"):
+                    eMsg = "\"" + ob.name + "\" has no materials."
+                    print(eMsg)
+                    operator.report({'ERROR'}, ob.name + " has no materials.")
+                    return{'CANCELLED'}
     
     # Make material chunks for all materials used in the meshes:
     file.write("MATERIALS{\n")
