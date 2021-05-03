@@ -58,7 +58,7 @@ The Materials tab has a panel which shows material settings supported by the Dar
 - **Shader Type**: Smooth for Flat shading.
   - Phong/Gouraud: Object lighting is smoothed across adjacent faces that use this shader type. Note that the Dark Engine doesn't really use Phong. Selecting that will just lead to Gouraud being applied. Phong has always been listed however, so it's inclusion here is just for consistency.
     - The export options includes a **Smooth Angle** which can limit the effect of the smooth shading. This applies to the entire object, however.
-  - Flat: Face is evenly lit, using the brighness of its centre
+  - Flat: Face is evenly lit, using the brightness of its centre
 - **Tranparency**: 0 = fully opaque (default), 100 = fully transparent.
 - **Illumination**: Allows faces to be fully lit, e.g. lantern glass. For animated lights the Dark Engine will automatically turn on/off faces with illuminated materials. Brightnesses can be modifed in Dromed using the Renderer > Self Illumination property (decimal, 0 - 1). Not confirmed at time of writing but I think it multiplies all 'ILLUM' material brightness values, up to a point.
 - **Double Sided**: Allows the face to be rendered when viewed from the back as well as the front. Effectively doubles the poly count for this material, so only use this where it's neede (e.g. where the player should be able to see both sides, e.g. flat fences, windows etc).
