@@ -1,7 +1,7 @@
 # Blender-NewDark-Toolkit
 Update to Telliamed's Blender Toolkit for .e files (see [the original version](https://www.ttlg.com/forums/showthread.php?t=136431) for motion tools). This now exports .bin files (path to BSP.exe required), and images are now only converted during import (to make them Blender compatible). The code for .bin export has been adapted from the Elendir's Dark Exporter 2 addon.
 
-## Summary and Basic Usage
+## Instructions
 This addon does three things:
 - Import .e files
 - Export .bin files for objects (uses **BSP.exe**)
@@ -61,7 +61,8 @@ The Materials tab has a panel which shows material settings supported by the Dar
   - **Tranparency**: 0 = fully opaque (default), 100 = fully transparent.
   - **Illumination**: Allows faces to be fully lit, e.g. lantern glass. For animated lights the Dark Engine will automatically turn on/off faces with illuminated materials. Brightnesses can be modifed in Dromed using the Renderer > Self Illumination property (decimal, 0 - 1). Not confirmed at time of writing but I think it multiplies all 'ILLUM' material brightness values, up to a point.
   - **Double Sided**: Allows the face to be rendered when viewed from the back as well as the front. Effectively doubles the poly count for this material, so only use this where it's neede (e.g. where the player should be able to see both sides, e.g. flat fences, windows etc).
-  - **Do Not Copy**: This will prevent the texture being copied *even when the overall Export Options do allow for copying*. Useful for when some textures are new and others are from a .crf file.
+  - **Do Not Copy Texture**: This will prevent the texture being copied *even when the overall Export Options do allow for copying*. Useful for when some textures are new and others are from a .crf file.
+  - **Import Materials From Custom Properties**: The previous version of this addon used custom properties to store material parameters. This button looks for any of those and applies them to the above properties. The custom properties are not deleted, but you should remove them yourself to keep things tidy.
 </details>
 
 User-defined BSP Parameters (advanced):<br/> 
@@ -74,32 +75,41 @@ User-defined BSP Parameters (advanced):<br/>
 </details>
 
 ## Installation
-Use the **Clone or Download** button and slect **Download as ZIP File**
+<details>
+  <summary>Click to expand. This is just standard addon installation, so if you already know about that, this section can be ignored.</summary>
+  
+Use the **Code** button and slect **Download as ZIP File**:<br/>
+![](Screenshots/download.JPG)<br/>
+It can be downloaded to any folder.
 
-In Blender, go to Edit > Preferences > Install:<br />
-![](BlenderNDToolkit/Install.jpg)
+In Blender, go to Edit > Preferences > Install and select the zip file:<br />
+![](Screenshots/install.JPG)
 
-Enable the addon, and at the bottom left check that Auto Save Preferences is eanbled. If not, use the Save button to remember the setting:<br />
-![](BlenderNDToolkit/EnableAndSave.jpg)
+The addons list will be automatically filtered, making it easy to enable the new addon:<br/>
+![](Screenshots/enable_new_addon.JPG)
 
-## Using the addon
+Check that Auto Save Preferences is eanbled. If not, use the Save button to remember the setting:<br />
+![](Screenshots/auto_save_prefs.JPG) or ![](Screenshots/save_prefs.JPG)
+</details>
 
 ## Setting Default Values
 There are several things to set up to allow the addon to work and be easy to use. In most cases it's clear which export option each varaible refers to, so this section just states valid values. All the options are all explained fully in the **Export** section of this readme.
 
-Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\2.80\config\scripts) and open **Bin_Export.cfg**.
+Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\[versuion number]\config\scripts) and open **Bin_Export.cfg**.
 
 **__NOTE THE FORMAT OF EACH DEFAULT VARIABLE BEFORE MAKING CHANGES__**<br />
 __Also note that the final variable does not end with a ,__<br />
 __Blender must be restarted for the changes to take effect__<br />
 
+- **ai_mesh**: true of false
 - **autodel**: true or false
 - **bin_copy**: true or false
 - **bsp_dir**: Path surrounded by "s. Use \\\ rather than just \\ to separate each part of a path.
 - **bsp_optimization**: 0 - 3
-- **game_dirs**: Multiple paths should be separated by a semicolon (and use \\\ rather than \\). Example: "**C:\\\Games\\\Thief2;C:\\\Games\\\Shock2**" will give you this menu:<br />
-![](BlenderNDToolkit/MultipleGameDirs.jpg)
 - **centering**: true or false
+- **game_dirs**: Multiple paths should be separated by a semicolon (and use \\\ rather than \\). Example: "**C:\\\Games\\\Thief2;C:\\\Games\\\Shock2**" will give you this menu:<br />
+![](Screenshots/game_dirs.JPG)
 - **selection_only**: true or false
+- **smooth_angle**: 0 - 360 (not a fixed limit, but unlikely to need much more beyond 120) 
 - **tex_copy**: 0, 1 or 2, which correspond with menu the menu items you see during Export<br />
 ![](BlenderNDToolkit/CopyTexOptions.jpg)
