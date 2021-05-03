@@ -296,7 +296,6 @@ def parse_E(filepath):
 
     def do_begin():
         nonlocal tokenizer, root, current
-
         if current:
             if not current['POINTS']:
                 raise ParseError("object "+current['NAME']+" has no points")
@@ -620,7 +619,7 @@ def load(operator,
         bpy.ops.object.select_all(action='DESELECT')
 
     time1 = time.clock()
-# 	time1 = Blender.sys.time()
+#   time1 = Blender.sys.time()
 
     try:
         efile = parse_E(filepath)
@@ -641,13 +640,23 @@ def load(operator,
             bmat = bpy.data.materials.new(mName)
             bmat.use_nodes = True
             mNodes = bmat.node_tree.nodes
+            
+            #delete principled shader as it's not needed for dark enigne objects
+            mNodes.remove(mNodes.get('Principled BSDF'))
+            
+            #create diffuse shader
+            shaderNode = mNodes.new(type='ShaderNodeBsdfDiffuse')
             #get the material output node which all materials should have
             matOutputNode = mNodes.get("Material Output")
-            #get whatever shader is the surface input to the material node - likely Diffuse BSDF or Principled BSDF
-            shaderNode = matOutputNode.inputs[0].links[0].from_node
-            #set specular to 0
-            shaderNode.inputs[5].default_value = 0
             
+            #for presentation only
+            shaderNode.location = matOutputNode.location.x - shaderNode.width -100, matOutputNode.location.y
+            
+            #create link from shader to output
+            links = mNodes.data.links
+            links.new(shaderNode.outputs[0], matOutputNode.inputs[0])
+            
+            #create texture or RGB input
             if 'RGB' in mat:
                 col = [co / 255 for co in mat['RGB']]
                 shaderNode.inputs[0].default_value = (col[0],col[1],col[2],255)
@@ -671,16 +680,13 @@ def load(operator,
                 links = bmat.node_tree.links
                 link = links.new(texNode.outputs[0], shaderNode.inputs[0])
 
-            if mat['SHADING'] == 'FLAT':
-                bmat["SHADER"] = "FLAT"
-            elif mat['SHADING'] == 'GOURAUD':
-                bmat["SHADER"] = "GOURAUD"
-            elif mat['SHADING'] == 'PHONG':
-                bmat["SHADER"] = "PHONG"
-            if 'TRANSP' in mat and mat['TRANSP'] > 0:
-                bmat["TRANSP"] = mat['TRANSP']
-            if 'ILLUM' in mat:
-                bmat["ILLUM"] = mat['ILLUM']
+            bmat.shader = mat['SHADING']
+            bmat.transp = mat['TRANSP']
+            bmat.illum = mat['ILLUM']
+            if 'DBL' in mat:
+                bmat.dbl = True
+            else:
+                bmat.use_backface_culling = True
         else:
             bmat = bpy.data.materials[mName]
         

@@ -28,6 +28,8 @@ import bpy
 import os
 import shutil
 
+from math import cos, radians
+
 if os.name == 'nt':
     convert_exe = '""' + os.path.split(__file__)[0] + os.path.sep + \
                   'convert.exe" -depth 8 -type palette "{}" "{}""'
@@ -84,7 +86,7 @@ def make_material_str(i, material, image, operator, ai_mesh):
 
     else:
         #2.80 material.use_shadeless no longer exists. Using custom property instead
-        shaderValue = str(material.get("SHADER"))
+        shaderValue = str(material.shader)
         if shaderValue == "PHONG":
             shaderType = "PHONG"
         else:
@@ -103,49 +105,16 @@ def make_material_str(i, material, image, operator, ai_mesh):
 
         else:
             mat_str.append(rgb_str)
-        
-        #2.80 material.emit does not exist, neither does material.use_transparency
-        #custom properties required instead
-        if not ai_mesh:
-            illum = material.get("ILLUM")
-            if illum:
-                mat_str.append("ILLUM "+ str(check0to100("ILLUM", illum, material, operator)))
 
-            transp = material.get("TRANSP")
-            if transp:
-                mat_str.append("TRANSP "+ str(check0to100("TRANSP", transp, material, operator)))
-            else:
-                mat_str.append("TRANSP 0")
-        
+        if not ai_mesh:
+            mat_str.append("ILLUM "+ str(material.illum))
+            mat_str.append("TRANSP "+ str(material.transp))
+
         #double sided materials
-        dblValue=str(material.get("DBL"))
-        if dblValue == "1.0" or dblValue == "1":
+        if material.dbl:
             mat_str.append("DBL")
 
     return ",".join(mat_str) + ";\n"
-
-#Checks if value (of custom property) is a number and between 0 and 100
-#If < 0, returns 0, if > 100, returns 100
-def check0to100(propName, value, material, operator):
-    withinLimits = False
-    try:    
-        valInt = int(value)
-        if valInt > 0 and valInt <= 100:
-            withinLimits = True
-            result = valInt
-        elif valInt < 0:
-            result = 0
-        elif valInt > 100:
-            result = 100
-    except:
-        return 0
-        
-    if withinLimits == False:
-        eMsg = propName + " must be between 0 and 100 for material \"" + material.name + "\". Using \"" + str(result) + "\" as value."
-        operator.report({'WARNING'}, eMsg)
-        print(eMsg)
-
-    return result
 
 def make_vertex_str(vertex):
     return ",".join([format(co, ".6f") for co in vertex.co]) + ";\n" #required to format v. small numbers in original format, e.g. 0.000002 instead of 2e-6.
@@ -249,21 +218,31 @@ def get_args(mesh_type, dir):
     }
     return args[mesh_type]
 
-def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type):
+#smooth threshold param requires cos of angle
+def calc_smooth_threshold(smooth_angle):
+    rad_angle = radians(smooth_angle)
+    return round(cos(rad_angle), 6)
+
+def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, use_ep, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params):
     bsp = os.path.join(bsp_dir, "BSP")
     mshbld = os.path.join(bsp_dir, "MESHBLD")
     meshUp = os.path.join(bsp_dir, "MeshUp")
     centString = ""
+    epString = ""
+    smooth_threshold = str(calc_smooth_threshold(smooth_angle))
+    if use_ep:
+        epString = " -ep" +str(ep)
     if centre:
         centString = " -o"
     if not ai_mesh:
-        command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\" -ep" + str(ep) + " -l" + str(opt) + " -V" + centString
+        command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\"" +epString + " -l" + str(opt) + " -V" + centString + " -M" + smooth_threshold + " " + extra_bsp_params
     else:
         arg_string = get_args(mesh_type, bsp_dir)
         command = "\"" + mshbld + "\" \"" + efile + "\" \"" + binfile + "\" " + arg_string
         v2mesh = binfile.replace(".bin", "2.bin")
         meshUpCmd = "\"" + meshUp + "\" \"" + binfile + "\" \"" + v2mesh + "\""
     print("Converting to .bin...")
+    print(command)
     os.system('call ' + command) #basic object conversion command
     if ai_mesh:
         if os.path.isfile(meshUp + ".exe"):
@@ -298,7 +277,7 @@ def copy_textures(materialDict, copyType, game_dir, ai_mesh):
         if ai_mesh:
             txt16 = os.path.join(game_dir, "mesh", "txt16")
         for m in materialDict.keys():
-            if not bpy.data.materials[m[0]].get("NoCopy") or bpy.data.materials[m[0]].get("NoCopy") == 0.0:
+            if not bpy.data.materials[m[0]].nocopy:
                 tex = get_diffuse_texture(bpy.data.materials[m[0]])
                 if tex is not None:
                     img = bpy.data.images[tex]
@@ -323,10 +302,14 @@ def save(operator,
          bsp_dir="",
          game_dirs=[],
          game_dir_ID=0,
-         bsp_optimization=0, ep=0.0, centering=True, bin_copy=True, autodel=False,
+         bsp_optimization=0, 
+         use_coplanar_limit=True, coplanar_limit=1.0, 
+         centering=True, bin_copy=True, autodel=False,
          tex_copy="1",
          ai_mesh=False,
-         mesh_type='humanoid'
+         mesh_type='humanoid',
+         smooth_angle = 120,
+         extra_bsp_params = ''
          ):
 
     import mathutils
@@ -451,7 +434,7 @@ def save(operator,
     game_dir = game_dirs[int(game_dir_ID)]
 
     if os.path.exists(game_dir):
-        result = convert_to_bin(efile, filepath, calfile, bsp_dir, bsp_optimization, ep, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type)
+        result = convert_to_bin(efile, filepath, calfile, bsp_dir, bsp_optimization, coplanar_limit, coplanar_limit, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params)
         if result == 1:
             copy_textures(materialDict, int(tex_copy), game_dir, ai_mesh)
             print("Export & Conversion time: %.2f" % (time.clock() - time1))
