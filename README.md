@@ -4,9 +4,17 @@ Update to Telliamed's Blender Toolkit for .e files (see [the original version](h
 This addon does three things:
 - Import .e files
 - Export .bin files for objects (uses **BSP.exe**)
-- Export .bin and .cal files for AI meshes (uses **MeshBld.exe**)
+- Export .bin and .cal files for AI meshes (uses **MeshBld.exe** and **MeshUp.exe**)
 
 The objects textures can be copied to the /txt16 folder, but you can choose the conditions and make exceptions.
+
+## Summary and Basic Usage
+The addon shows up in a number of places.
+File > Import/Export menus:<br />
+![](Screenshots/import.jpg) ![](Screenshots/export.jpg)
+
+Material Properties:<br />
+![](Screenshots/MaterialParams.JPG)
 
 ## Installation
 Use the **Clone or Download** button and slect **Download as ZIP File**
