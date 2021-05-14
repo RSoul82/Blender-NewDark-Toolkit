@@ -1,5 +1,13 @@
 # Blender-NewDark-Toolkit
-Update to Telliamed's Blender Toolkit for .e files (see [the original version](https://www.ttlg.com/forums/showthread.php?t=136431) for motion tools). This now exports .bin files (path to BSP.exe required), and images are now only converted during import (to make them Blender compatible). The code for .bin export has been adapted from the Elendir's Dark Exporter 2 addon.
+This addon allows Blender to export .bin files (Dark Engine objects and AI meshes) and import .e files (plain text files developed by LGS as an intermediate format for object conversion).
+
+This is an update to Telliamed's Blender Toolkit for .e files (see [the original version](https://www.ttlg.com/forums/showthread.php?t=136431) for motion tools). This now exports .bin files (path to BSP.exe required), and images are now only converted during import (to make them Blender compatible). The code for .bin export has been adapted from the Elendir's Dark Exporter 2 addon.
+
+## Requirements
+  * The latest version was written in Blender 2.93. It'll probably work in 2.80 but it's best to use the latest version.
+  * The LGS programs BSP.exe and MeshBld.exe. Most fan-made installation tools (e.g. T2Fix, Dromed Toolkit etc) will include these.
+  * Shadowspawn's MeshUp tool (from the MeshFix pack [here](https://www.angelfire.com/games4/shadowspawn/Tools.html), or various Thief/Dromed installation packs) , which converts AI meshes to the T2 format (this allows Texture Replacement to work).
+  * The template .cal files which are also used for generating AI meshes. See your copy of mesh.crf.
 
 ## Instructions
 This addon does three things:
