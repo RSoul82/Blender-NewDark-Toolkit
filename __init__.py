@@ -231,7 +231,7 @@ def get_active_mat(self, context):
     return context.active_object.active_material
 
 class MaterialPropertiesPanel(bpy.types.Panel):
-    bl_idname = 'DE_MatPanel_PT_dark_engine_exporter'
+    bl_idname = 'DE_MATPANEL_PT_dark_engine_exporter'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'material'
@@ -270,7 +270,7 @@ class ImportMaterialFromCustomProps(bpy.types.Operator):
         return {'FINISHED'}
 
 class BSPExtraParams(bpy.types.Panel):
-    bl_idname = 'DE_BSPPanel_PT_dark_engine_exporter'
+    bl_idname = 'DE_BSPPANEL_PT_dark_engine_exporter'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'object'
