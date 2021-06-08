@@ -681,8 +681,10 @@ def load(operator,
                 link = links.new(texNode.outputs[0], shaderNode.inputs[0])
 
             bmat.shader = mat['SHADING']
-            bmat.transp = mat['TRANSP']
-            bmat.illum = mat['ILLUM']
+            if 'TRANSP' in mat:
+                bmat.transp = mat['TRANSP']
+            if 'ILLUM' in mat:
+                bmat.illum = mat['ILLUM']
             if 'DBL' in mat:
                 bmat.dbl = True
             else:
