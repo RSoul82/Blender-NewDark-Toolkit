@@ -618,8 +618,7 @@ def load(operator,
     if bpy.ops.object.select_all.poll():
         bpy.ops.object.select_all(action='DESELECT')
 
-    time1 = time.clock()
-#   time1 = Blender.sys.time()
+    time1 = time.time()
 
     try:
         efile = parse_E(filepath)
@@ -730,6 +729,6 @@ def load(operator,
         bpy.data.collections[0].objects.link(newObj)
 
     # Select all new objects.
-    print(" done in %.4f sec." % (time.clock() - time1))
+    print(" done in %.4f sec." % (time.time() - time1))
 
     return {'FINISHED'}

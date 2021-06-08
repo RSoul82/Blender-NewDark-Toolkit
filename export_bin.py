@@ -319,8 +319,7 @@ def save(operator,
     '''Save the Blender scene to a E file.'''
 
     # Time the export
-    time1 = time.clock()
-#   Blender.Window.WaitCursor(1)
+    time1 = time.time()
 
     # Open the file for writing:
     efile = filepath.replace(".bin", ".e")
@@ -437,7 +436,7 @@ def save(operator,
         result = convert_to_bin(efile, filepath, calfile, bsp_dir, bsp_optimization, coplanar_limit, coplanar_limit, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params)
         if result == 1:
             copy_textures(materialDict, int(tex_copy), game_dir, ai_mesh)
-            print("Export & Conversion time: %.2f" % (time.clock() - time1))
+            print("Export & Conversion time: %.2f" % (time.time() - time1))
             operator.report({'INFO'}, 'Done')
         else:
             operator.report({'ERROR'}, 'Error writing BIN file!')
