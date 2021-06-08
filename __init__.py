@@ -61,23 +61,35 @@ default_config = {
 config_filename = 'Bin_Export.cfg'
 config_path = bpy.utils.user_resource('CONFIG', path='scripts', create=True)
 config_filepath = os.path.join(config_path, config_filename)
+
+def load_config():
+    config_file = open(config_filepath, 'r')
+    config_from_file = json.load(config_file)
+    config_file.close()
+    return config_from_file
+
 try:
     config_file = open(config_filepath, 'r')
     config_from_file = json.load(config_file)
+    config_file.close()
 except IOError:
     config_file = open(config_filepath, 'w')
     json.dump(default_config, config_file, indent=4, sort_keys=True)
     config_file.close()
-    config_file = open(config_filepath, 'r')
-    config_from_file = json.load(config_file)
-    config_file.close()
+    load_config()
     
 #Try to get a value from a config file. Return ... if key not founnd.
 def tryConfig(key, config_from_file):
     try:
         return config_from_file[key]
     except:
-        return ''
+        config_file.close()
+        config_from_file[key] = default_config[key] #add missing key with default value
+        config_update = open(config_filepath, 'w')
+        json.dump(config_from_file, config_update, indent = 4, sort_keys = True)
+        config_update.close()
+        load_config()
+        return config_from_file[key]
 
 class ImportE(bpy.types.Operator, ImportHelper):
     '''Import from E file format (.e)'''
@@ -132,10 +144,10 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     bl_options = {'PRESET'}
 
     use_selection: BoolProperty(name='Selection Only', description='Export selected objects only', default=False)
-    centering: BoolProperty(name='Center object', default=config_from_file['centering'], 
+    centering: BoolProperty(name='Center object', default=tryConfig('centering', config_from_file), 
     description='Center your object near its centroid')
     apply_modifiers: BoolProperty(name='Apply Modifiers', description='Apply modifiers to exported object.', default = True)
-    smooth_angle: IntProperty(name='Smooth Angle', min=0, max=360, step=1, description='Max angle between faces that should be smoothly shaded. Default: 120. Only applies to Phong/Gouraud materials', default=config_from_file['smooth_angle'])
+    smooth_angle: IntProperty(name='Smooth Angle', min=0, max=360, step=1, description='Max angle between faces that should be smoothly shaded. Default: 120. Only applies to Phong/Gouraud materials', default=tryConfig('smooth_angle', config_from_file))
     bsp_optimization: IntProperty(name='BSP Optimization', min=0, max=3, step=1, description='BSP Optimization levels (0 recommended)', default=0)
     use_coplanar_limit: BoolProperty(name='Use Coplanar Limit', description='Disable this if you can see errors in your object\'s shape', default = True)
     coplanar_limit: FloatProperty(name='Coplanar Limit', description='Change this if you get small gaps in the model or flattened faces', default = 1.0)
@@ -152,9 +164,9 @@ class ExportBin(bpy.types.Operator, ExportHelper):
         game_dirs.append(split[i].strip())
     
     game_dir_ID: EnumProperty(name='Game Dir', items = enum_dirs, description='Folder containing Thief/Thief2.exe, Dromed.exe, Shock2.exe etc')
-    bin_copy: BoolProperty(name='Bin Copy', default=config_from_file['bin_copy'],
+    bin_copy: BoolProperty(name='Bin Copy', default=tryConfig('bin_copy', config_from_file),
     description='Copy model to obj subfolder')
-    autodel: BoolProperty(name='Delete temp files', default=config_from_file['autodel'],
+    autodel: BoolProperty(name='Delete temp files', default=tryConfig('autodel', config_from_file),
     description='Delete local temporary files.')
     tex_copy: EnumProperty(name='Copy Textures', items=(('0', 'Never', ''), ('1', 'Only if not present', ''), ('2', 'Always', '')), default='1',
     description='Copy textures to obj\\txt16. Default = Only when texture isn\'t already in txt16')
