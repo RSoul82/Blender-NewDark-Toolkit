@@ -622,8 +622,8 @@ def load(operator,
 
     try:
         efile = parse_E(filepath)
-    except ParseError:
-        print('\tFatal Error:  Not a valid E file: %r' % filepath)
+    except ParseError as e:
+        operator.report({"ERROR"}, f'Not a valid E file: "{filepath}" : {e}')
         return {'CANCELLED'}
 
     importedObjects = []  # Fill this list with objects
