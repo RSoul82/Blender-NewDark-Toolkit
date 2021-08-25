@@ -64,11 +64,11 @@ class ParseError(Exception):
 
     def __str__(self):
         if self.line and self.column:
-            return "{line}:{column}: {str}".format_map(self)
+            return f"{self.line}:{self.column}: {self.str}"
         elif self.line:
-            return "{line}: {str}".format_map(self)
+            return f"{self.line}: {self.str}"
         else:
-            return "{str}".format_map(self)
+            return f"{self.str}"
 
     def __repr__(self):
         return "ParseError"+repr(self.args)
