@@ -64,11 +64,11 @@ class ParseError(Exception):
 
     def __str__(self):
         if self.line and self.column:
-            return "{line}:{column}: {str}".format_map(self)
+            return f"{self.line}:{self.column}: {self.str}"
         elif self.line:
-            return "{line}: {str}".format_map(self)
+            return f"{self.line}: {self.str}"
         else:
-            return "{str}".format_map(self)
+            return f"{self.str}"
 
     def __repr__(self):
         return "ParseError"+repr(self.args)
@@ -622,8 +622,8 @@ def load(operator,
 
     try:
         efile = parse_E(filepath)
-    except ParseError:
-        print('\tFatal Error:  Not a valid E file: %r' % filepath)
+    except ParseError as e:
+        operator.report({"ERROR"}, f'Not a valid E file: "{filepath}" : {e}')
         return {'CANCELLED'}
 
     importedObjects = []  # Fill this list with objects
