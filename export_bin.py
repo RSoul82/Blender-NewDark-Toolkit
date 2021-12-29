@@ -266,11 +266,11 @@ def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, use_ep, ep, centre, bi
                 if(ai_mesh):
                     os.remove(calfile)
                 print("Temporary files deleted.")
-            return 1
         except:
             print("\nERROR! I guess BIN file wasn't generated!")
             return 0
-        
+    return 1
+
 def copy_textures(materialDict, copyType, game_dir, ai_mesh):
     if copyType > 0:
         txt16 = os.path.join(game_dir, "obj", "txt16")
