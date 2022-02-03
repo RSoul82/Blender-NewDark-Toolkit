@@ -74,6 +74,10 @@ class ParseError(Exception):
         return "ParseError"+repr(self.args)
 
 
+class PartMaterialsHexadecimal(ParseError): pass
+class PartMaterialsZeroIndexed(ParseError): pass
+
+
 class Tokenizer(object):
 
     __slots__ = ("name", "line", "column", "tokenizer", "next_token")
@@ -208,7 +212,7 @@ class Tokenizer(object):
             return None
 
 
-def parse_E(filepath):
+def parse_E(filepath, zero_indexed_materials=False, hexadecimal_materials=False):
     tokenizer = Tokenizer(filepath)
     root = { 'MATERIALS':[], 'OBJECTS':[] }
     current = None
@@ -367,7 +371,38 @@ def parse_E(filepath):
                     raise ParseError("bad part index",
                                     tokenizer.line, tokenizer.column)
 
-                mat = int(tokenizer.next_and_check(','), 16) & 0xFF
+                # 3DS2E outputs hexadecimal material ids, so we should really
+                # only accept that. But Shadowspawn's BINTOE.EXE sometimes
+                # outputs base 10 material ids. If we try base 10 first, then
+                # we can detect problems (when there's >10 materials) once we
+                # see hexadecimal digits, and then retry, this time insisting
+                # on hexadecimal.
+                mat_id = tokenizer.next_and_check(',')
+                if hexadecimal_materials:
+                    mat = int(mat_id, 16)
+                else:
+                    try:
+                        mat = int(mat_id, 10)
+                    except ValueError:
+                        print("PARTS has hexadecimal material ids; retrying import.")
+                        raise PartMaterialsHexadecimal("hexadecimal material index",
+                                        tokenizer.line, tokenizer.column)
+                mat = mat & 0xFF
+
+                # 3DS2E outputs 1-based material ids, so we should really only
+                # accept that. But Shadowspawn's BINTOE.EXE sometimes outputs
+                # a .e with 1-indexed material numbers in the PARTS section,
+                # and sometimes outputs 0-indexed material numbers there. So
+                # if we encounter the latter, we signal it with this exception;
+                # the import will be retried, and this time we adjusted all the
+                # PARTS material numbers.
+                if zero_indexed_materials:
+                    mat += 1;
+                elif mat==0:
+                    print("PARTS has zero-indexed materials; retrying import.")
+                    raise PartMaterialsZeroIndexed("zero material index",
+                                    tokenizer.line, tokenizer.column)
+
                 if (mat < 1 or mat > len(root['MATERIALS'])
                 or not root['MATERIALS'][mat-1]):
                     raise ParseError("bad material index",
@@ -621,7 +656,20 @@ def load(operator,
     time1 = time.time()
 
     try:
-        efile = parse_E(filepath)
+        params = {
+            'zero_indexed_materials': False,
+            'hexadecimal_materials': False,
+            }
+        # Keep trying the import, changing params as needed until it succeeds.
+        while True:
+            try:
+                efile = parse_E(filepath, **params)
+            except PartMaterialsZeroIndexed:
+                params['zero_indexed_materials'] = True
+            except PartMaterialsHexadecimal:
+                params['hexadecimal_materials'] = True
+            else:
+                break
     except ParseError as e:
         operator.report({"ERROR"}, f'Not a valid E file: "{filepath}" : {e}')
         return {'CANCELLED'}
