@@ -49,7 +49,7 @@ This presents you with many options:<br/>
   - **Always** (textures will be copied to obj\txt16 and existing files will be overwritten)*
   - **Only if not present** (existing files won't be overwritten - this is recommended because an existing object may use a texture that has the same but that looks vrey different to the one for your object. When you see your object in game, you'll see that it looks different, so you'll be able to rename the texture and export again).*
   - **Never** (useful if your object is only using stock textures)
-  - *Object materials have a 'Do Not Copy' property which prevents that texture being copied, even when either of the first two options is chosen.*
+  - \* Object materials have a 'Do Not Copy' property which prevents that texture being copied, even when either of the first two options is chosen.
 - **AI Mesh**: Select this when exporting a creature (things with joints/limit planes etc).
 - **Mesh Type**: When the above is selected, this specifies a kind of 'template' file for the AI to ensure the mesh has all the right joints in all the right places.
 - **Forward** and **Up** axes: These can adjust the orientation of the objects. Defaults should be fine.
@@ -104,13 +104,13 @@ Check that Auto Save Preferences is eanbled. If not, use the Save button to reme
 ## Setting Default Values
 There are several things to set up to allow the addon to work and be easy to use. In most cases it's clear which export option each varaible refers to, so this section just states valid values. All the options are all explained fully in the **Export** section of this readme.
 
-Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\[versuion number]\config\scripts) and open **Bin_Export.cfg**.
+Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\[version number]\config\scripts) and open **Bin_Export.cfg**.
 
 **__NOTE THE FORMAT OF EACH DEFAULT VARIABLE BEFORE MAKING CHANGES__**<br />
 __Also note that the final variable does not end with a ,__<br />
 __Blender must be restarted for the changes to take effect__<br />
 
-- **ai_mesh**: true of false
+- **ai_mesh**: true or false
 - **autodel**: true or false
 - **bin_copy**: true or false
 - **bsp_dir**: Path surrounded by "s. Use \\\ rather than just \\ to separate each part of a path.
