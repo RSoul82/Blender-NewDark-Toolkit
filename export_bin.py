@@ -20,7 +20,7 @@
 
 # Script copyright (C) Tom N Harris
 # Contributors: Campbell Barton, Bob Holcomb, Richard Lärkäng, Damien McGinnes, Mark Stijnman
-# 2.80/2.9x Update by Robin Collier
+# 2.80/2.9x/3.x Update by Robin Collier
 
 ######################################################
 
@@ -102,13 +102,12 @@ def make_material_str(i, material, image, operator, ai_mesh):
         texture = get_diffuse_texture(material)
         if texture:
             mat_str.append('TMAP "' + texture + '",0')
-
         else:
             mat_str.append(rgb_str)
 
         if not ai_mesh:
             mat_str.append("ILLUM "+ str(material.illum))
-            mat_str.append("TRANSP "+ str(material.transp))
+            mat_str.append("TRANSP "+ str(get_real_transp_value(material)))
 
         #double sided materials
         if material.dbl:
@@ -116,9 +115,15 @@ def make_material_str(i, material, image, operator, ai_mesh):
 
     return ",".join(mat_str) + ";\n"
 
+#values 0 and 100 are fine but values in between must be inverted
+def get_real_transp_value(material):
+    if material.transp > 0 and material.transp < 100:
+        return 100 - material.transp
+    else:
+        return material.transp
+
 def make_vertex_str(vertex):
     return ",".join([format(co, ".6f") for co in vertex.co]) + ";\n" #required to format v. small numbers in original format, e.g. 0.000002 instead of 2e-6.
-    #return ",".join(str(round(co, 6)) for co in vertex.co) + ";\n"
 
 def make_face_str(num, face, uv_tex, vert_map, materials, materialDict):
     if face.material_index < len(materials):
@@ -130,7 +135,6 @@ def make_face_str(num, face, uv_tex, vert_map, materials, materialDict):
     else:
         mat_index = 0
     point = "(" + ",".join([str(round(co, 6)) for co in face.vertices]) + ")"    
-    #point = "(" + ",".join([str(co) for co in face.vertices]) + ")"    
     
     return "0,N,{},{:>4x},{};\n".format(num, mat_index, point)
 
@@ -308,7 +312,7 @@ def save(operator,
          tex_copy="1",
          ai_mesh=False,
          mesh_type='humanoid',
-         smooth_angle = 120,
+         smooth_angle = 89,
          extra_bsp_params = ''
          ):
 
