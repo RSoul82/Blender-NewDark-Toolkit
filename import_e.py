@@ -640,6 +640,16 @@ def axleCheck(verts):
         edges.append((0,1))
     return edges
 
+#values 0 and 100 are fine but values in between must be inverted
+def get_real_transp_value(transpValue):
+    print(type(transpValue))
+    print(transpValue)
+    if transpValue > 0 and transpValue < 100:
+        print(transpValue)
+        return 100 - transpValue
+    else:
+        return transpValue
+
 def load(operator,
          context,
          filepath="",
@@ -729,7 +739,7 @@ def load(operator,
 
             bmat.shader = mat['SHADING']
             if 'TRANSP' in mat:
-                bmat.transp = mat['TRANSP']
+                bmat.transp = get_real_transp_value(mat['TRANSP'])
             if 'ILLUM' in mat:
                 bmat.illum = mat['ILLUM']
             if 'DBL' in mat:
