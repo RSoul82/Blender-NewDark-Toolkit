@@ -20,8 +20,8 @@
 
 bl_info = {
     'name': 'Blender NewDark Toolkit',
-    'author': 'Tom N Harris, 2.80/2.9x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 5, 0),
+    'author': 'Tom N Harris, 2.80/2.9x/3.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
+    'version': (1, 5, 1),
     'blender': (2, 92, 0),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
@@ -50,7 +50,7 @@ default_config = {
 'bsp_optimization': 0,
 'centering': True,
 'selection_only': False,
-'smooth_angle': 120,
+'smooth_angle': 89,
 'game_dirs': 'C:\\Games\\Thief2',
 'bsp_meshbld_dir': 'C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop',
 'autodel': False,
