@@ -20,7 +20,7 @@
 
 # Script copyright (C) Tom N Harris
 # Contributors: Campbell Barton, Bob Holcomb, Richard Lärkäng, Damien McGinnes, Mark Stijnman
-# 2.80/2.9x Update by Robin Collier
+# 2.80/2.9x/3.x Update by Robin Collier
 
 ######################################################
 
@@ -102,13 +102,12 @@ def make_material_str(i, material, image, operator, ai_mesh):
         texture = get_diffuse_texture(material)
         if texture:
             mat_str.append('TMAP "' + texture + '",0')
-
         else:
             mat_str.append(rgb_str)
 
         if not ai_mesh:
             mat_str.append("ILLUM "+ str(material.illum))
-            mat_str.append("TRANSP "+ str(material.transp))
+            mat_str.append("TRANSP "+ str(get_real_transp_value(material)))
 
         #double sided materials
         if material.dbl:
@@ -116,9 +115,15 @@ def make_material_str(i, material, image, operator, ai_mesh):
 
     return ",".join(mat_str) + ";\n"
 
+#values 0 and 100 are fine but values in between must be inverted
+def get_real_transp_value(material):
+    if material.transp > 0 and material.transp < 100:
+        return 100 - material.transp
+    else:
+        return material.transp
+
 def make_vertex_str(vertex):
     return ",".join([format(co, ".6f") for co in vertex.co]) + ";\n" #required to format v. small numbers in original format, e.g. 0.000002 instead of 2e-6.
-    #return ",".join(str(round(co, 6)) for co in vertex.co) + ";\n"
 
 def make_face_str(num, face, uv_tex, vert_map, materials, materialDict):
     if face.material_index < len(materials):
@@ -130,7 +135,6 @@ def make_face_str(num, face, uv_tex, vert_map, materials, materialDict):
     else:
         mat_index = 0
     point = "(" + ",".join([str(round(co, 6)) for co in face.vertices]) + ")"    
-    #point = "(" + ",".join([str(co) for co in face.vertices]) + ")"    
     
     return "0,N,{},{:>4x},{};\n".format(num, mat_index, point)
 
@@ -266,11 +270,11 @@ def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, use_ep, ep, centre, bi
                 if(ai_mesh):
                     os.remove(calfile)
                 print("Temporary files deleted.")
-            return 1
         except:
             print("\nERROR! I guess BIN file wasn't generated!")
             return 0
-        
+    return 1
+
 def copy_textures(materialDict, copyType, game_dir, ai_mesh):
     if copyType > 0:
         txt16 = os.path.join(game_dir, "obj", "txt16")
@@ -308,7 +312,7 @@ def save(operator,
          tex_copy="1",
          ai_mesh=False,
          mesh_type='humanoid',
-         smooth_angle = 120,
+         smooth_angle = 89,
          extra_bsp_params = ''
          ):
 
@@ -319,8 +323,7 @@ def save(operator,
     '''Save the Blender scene to a E file.'''
 
     # Time the export
-    time1 = time.clock()
-#   Blender.Window.WaitCursor(1)
+    time1 = time.time()
 
     # Open the file for writing:
     efile = filepath.replace(".bin", ".e")
@@ -437,7 +440,7 @@ def save(operator,
         result = convert_to_bin(efile, filepath, calfile, bsp_dir, bsp_optimization, coplanar_limit, coplanar_limit, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params)
         if result == 1:
             copy_textures(materialDict, int(tex_copy), game_dir, ai_mesh)
-            print("Export & Conversion time: %.2f" % (time.clock() - time1))
+            print("Export & Conversion time: %.2f" % (time.time() - time1))
             operator.report({'INFO'}, 'Done')
         else:
             operator.report({'ERROR'}, 'Error writing BIN file!')
