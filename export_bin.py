@@ -403,7 +403,7 @@ def save(operator,
     for ob, blender_mesh in mesh_objects:
 
         # set the object name
-        file.write('BEGIN "'+ob.name+'"\n\n')
+        file.write('BEGIN "'+ob.name.lower()+'"\n\n')
 
         vert_map = {}
 
