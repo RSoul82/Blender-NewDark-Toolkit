@@ -21,7 +21,7 @@
 bl_info = {
     'name': 'Blender NewDark Toolkit',
     'author': 'Tom N Harris, 2.80/2.9x/3.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 5, 1),
+    'version': (1, 5, 2),
     'blender': (2, 92, 0),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
@@ -269,18 +269,29 @@ class ImportMaterialFromCustomProps(bpy.types.Operator):
                 activeMat.nocopy = True;
         return {'FINISHED'}
 
-class BSPExtraParams(bpy.types.Panel):
+class BSPExportParams(bpy.types.Panel):
     bl_idname = 'DE_BSPPANEL_PT_dark_engine_exporter'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'object'
-    bl_label = 'BSP Additional Params (NewDark Toolkit)'
+    bl_label = 'BSP Export Params (NewDark Toolkit)'
 
     def draw(self, context):
         layout = self.layout
         layout.row().label(text='Additional BSP Params:')
         layout.row().prop(context.scene, 'bspParams')
         layout.row().label(text='NOTE: Incorrect/duplicate params may cause conversion errors.')
+        layout.row().operator('file.open_config', icon = 'SETTINGS')
+        
+class OpenConfigFile(bpy.types.Operator):
+    bl_idname = 'file.open_config'
+    bl_label = 'Open Config File'
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        os.startfile(config_filepath)
+        return {'FINISHED'}
+    
 
 # Add to a menu
 def menu_func_export(self, context):
@@ -293,7 +304,8 @@ classes = (
             ImportE, 
             ExportBin,MaterialPropertiesPanel, 
             ImportMaterialFromCustomProps, 
-            BSPExtraParams
+            OpenConfigFile, 
+            BSPExportParams
             )
 
 def register():
