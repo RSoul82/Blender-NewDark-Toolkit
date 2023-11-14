@@ -21,7 +21,7 @@
 bl_info = {
     'name': 'Blender NewDark Toolkit',
     'author': 'Tom N Harris, 2.80/2.9x/3.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 5, 2),
+    'version': (1, 5, 3),
     'blender': (2, 92, 0),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
