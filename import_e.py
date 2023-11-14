@@ -769,7 +769,6 @@ def load(operator,
         edges = axleCheck(verts)
         
         newObj.data.from_pydata(verts, edges, faces)
-        newObj.data.validate()
         
         for source, target in zip(obj['FACES'], newObj.data.polygons):
             efileMatID = source['MATERIAL'] #0 indexed material ID assigned to each face in
@@ -783,6 +782,8 @@ def load(operator,
         if uv_data is not None:
             for loop, uv in zip(uv_map.data, uv_data):
                 loop.uv = uv
+        
+        newObj.data.validate() #moved from before material and uv code
         
         if not bpy.data.collections:
             bpy.data.collections.new("Collection 1")
