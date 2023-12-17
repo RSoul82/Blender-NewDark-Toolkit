@@ -63,20 +63,15 @@ config_path = bpy.utils.user_resource('CONFIG', path='scripts', create=True)
 config_filepath = os.path.join(config_path, config_filename)
 
 def load_config():
-    config_file = open(config_filepath, 'r')
-    config_from_file = json.load(config_file)
-    config_file.close()
-    return config_from_file
+    with open(config_filepath, 'r') as config_file:
+        return json.load(config_file)
 
 try:
-    config_file = open(config_filepath, 'r')
-    config_from_file = json.load(config_file)
-    config_file.close()
+    config_from_file = load_config()
 except IOError:
-    config_file = open(config_filepath, 'w')
-    json.dump(default_config, config_file, indent=4, sort_keys=True)
-    config_file.close()
-    load_config()
+    with open(config_filepath, 'w') as config_file:
+        json.dump(default_config, config_file, indent=4, sort_keys=True)
+    config_from_file = load_config()
     
 #Try to get a value from a config file. Return ... if key not founnd.
 def tryConfig(key, config_from_file):
