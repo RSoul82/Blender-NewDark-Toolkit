@@ -227,7 +227,7 @@ def calc_smooth_threshold(smooth_angle):
     rad_angle = radians(smooth_angle)
     return round(cos(rad_angle), 6)
 
-def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, use_ep, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params):
+def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params):
     bsp = os.path.join(bsp_dir, "BSP")
     mshbld = os.path.join(bsp_dir, "MESHBLD")
     meshUp = os.path.join(bsp_dir, "MeshUp")
@@ -239,20 +239,39 @@ def convert_to_bin(efile, binfile, calfile, bsp_dir, opt, use_ep, ep, centre, bi
     if centre:
         centString = " -o"
     if not ai_mesh:
-        command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\"" +epString + " -l" + str(opt) + " -V" + centString + " -M" + smooth_threshold + " " + extra_bsp_params
+        if os.name == 'posix':
+            #assumes user has not changed wine's default drive mappings
+            command = "\"" + bsp + "\" \"Z:\\" + efile + "\" \"Z:\\" + binfile + "\"" +epString + " -l" + str(opt) + " -V" + centString + " -M" + smooth_threshold + " " + extra_bsp_params
+        else:
+            command = "\"" + bsp + "\" \"" + efile + "\" \"" + binfile + "\"" +epString + " -l" + str(opt) + " -V" + centString + " -M" + smooth_threshold + " " + extra_bsp_params
     else:
         arg_string = get_args(mesh_type, bsp_dir)
-        command = "\"" + mshbld + "\" \"" + efile + "\" \"" + binfile + "\" " + arg_string
         v2mesh = binfile.replace(".bin", "2.bin")
-        meshUpCmd = "\"" + meshUp + "\" \"" + binfile + "\" \"" + v2mesh + "\""
+        if os.name == 'posix':
+            #assumes user has not changed wine's default drive mappings
+            command = "\"" + mshbld + "\" \"Z:\\" + efile + "\" \"Z:\\" + binfile + "\" " + arg_string
+            meshUpCmd = "\"" + meshUp + "\" \"Z:\\" + binfile + "\" \"Z:\\" + v2mesh + "\""
+        else:
+            command = "\"" + mshbld + "\" \"" + efile + "\" \"" + binfile + "\" " + arg_string
+            meshUpCmd = "\"" + meshUp + "\" \"" + binfile + "\" \"" + v2mesh + "\""
     print("Converting to .bin...")
     print(command)
-    os.system('call ' + command) #basic object conversion command
+    if os.name == 'posix':
+        os.environ['WINEPREFIX'] = wineprefix
+        os.system('wine ' + command) #basic object conversion command
+    else:
+        os.system('call ' + command) #basic object conversion command
+
     if ai_mesh:
         if os.path.isfile(meshUp + ".exe"):
-            os.system('call ' + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
-            os.remove(binfile) #remove original bin file
-            os.system('call rename ' + v2mesh + ' ' + os.path.basename(v2mesh).replace("2.bin", ".bin")) #rename new bin file to original filename
+            if os.name == 'posix':
+                os.system('wine ' + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
+                os.remove(binfile) #remove original bin file
+                os.system('mv ' + v2mesh + ' ' + os.path.basename(v2mesh).replace("2.bin", ".bin")) #rename new bin file to original filename
+            else:
+                os.system('call ' + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
+                os.remove(binfile) #remove original bin file
+                os.system('call rename ' + v2mesh + ' ' + os.path.basename(v2mesh).replace("2.bin", ".bin")) #rename new bin file to original filename
     if bin_copy:
         obj_dir = os.path.join(game_dir, "obj")
         if ai_mesh:
@@ -303,6 +322,7 @@ def save(operator,
          use_selection=True,
          apply_modifiers=True,
          global_matrix=None,
+         wineprefix="",
          bsp_dir="",
          game_dirs=[],
          game_dir_ID=0,
@@ -437,7 +457,7 @@ def save(operator,
     game_dir = game_dirs[int(game_dir_ID)]
 
     if os.path.exists(game_dir):
-        result = convert_to_bin(efile, filepath, calfile, bsp_dir, bsp_optimization, coplanar_limit, coplanar_limit, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params)
+        result = convert_to_bin(efile, filepath, calfile, wineprefix, bsp_dir, bsp_optimization, coplanar_limit, coplanar_limit, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params)
         if result == 1:
             copy_textures(materialDict, int(tex_copy), game_dir, ai_mesh)
             print("Export & Conversion time: %.2f" % (time.time() - time1))
