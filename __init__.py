@@ -52,7 +52,7 @@ default_config = {
 'selection_only': False,
 'smooth_angle': 89,
 'game_dirs': 'C:\\Games\\Thief2',
-'bsp_meshbld_dir': 'C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop',
+'bsp_meshbld_dir': 'C:\\some\\path\\to\\folder\\containing\\BSP and meshbld etc',
 'wineprefix': '$HOME/.wine',
 'autodel': False,
 'bin_copy': True,
