@@ -113,12 +113,14 @@ __Blender must be restarted for the changes to take effect__<br />
 - **ai_mesh**: true or false
 - **autodel**: true or false
 - **bin_copy**: true or false
-- **bsp_dir**: Path surrounded by "s. Use \\\ rather than just \\ to separate each part of a path.
+- **bsp_dir**: Path surrounded by "s. Use \\\ rather than just \\ to separate each part of a path. Linux users should use / to separate instead.
 - **bsp_optimization**: 0 - 3
 - **centering**: true or false
 - **game_dirs**: Multiple paths should be separated by a semicolon (and use \\\ rather than \\). Example: "**C:\\\Games\\\Thief2;C:\\\Games\\\Shock2**" will give you this menu:<br />
-![](Screenshots/game_dirs.JPG)
+![](Screenshots/game_dirs.JPG)<br />
+Note: On Linux use the path to the game under wineprefix (eg. \<path to games\>/games/wine/drive_c/thief2 or $HOME/.wine/drive_c/thief2)
 - **selection_only**: true or false
 - **smooth_angle**: 0 - 360 (not a fixed limit, but unlikely to need much more beyond 120) 
 - **tex_copy**: 0, 1 or 2, which correspond with menu the menu items you see during Export<br />
+- **wineprefix**: path to wine prefix (Linux only)
 ![](BlenderNDToolkit/CopyTexOptions.jpg)

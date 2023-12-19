@@ -53,6 +53,7 @@ default_config = {
 'smooth_angle': 89,
 'game_dirs': 'C:\\Games\\Thief2',
 'bsp_meshbld_dir': 'C:\\Games\\Thief2\\Tools\\3dstobin\\3ds\\Workshop',
+'wineprefix': '$HOME/.wine',
 'autodel': False,
 'bin_copy': True,
 'tex_copy': 1
@@ -147,6 +148,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     use_coplanar_limit: BoolProperty(name='Use Coplanar Limit', description='Disable this if you can see errors in your object\'s shape', default = True)
     coplanar_limit: FloatProperty(name='Coplanar Limit', description='Change this if you get small gaps in the model or flattened faces', default = 1.0)
     
+    wineprefix: StringProperty(default=tryConfig('wineprefix', config_from_file), name='Wine prefix', description='Wine prefix to use while executing BSP.exe and/or MeshBld.exe (Linux only)')
     bsp_dir: StringProperty(default=tryConfig('bsp_meshbld_dir', config_from_file), name='BSP/MeshBld Dir', description='Folder containing BSP.exe and/or MeshBld.exe')
     
     #generate game dirs list
