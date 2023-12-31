@@ -21,7 +21,7 @@
 bl_info = {
     'name': 'Blender NewDark Toolkit',
     'author': 'Tom N Harris, 2.80/2.9x/3.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 5, 5),
+    'version': (1, 5, 6),
     'blender': (4, 0, 2),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
@@ -74,12 +74,11 @@ except IOError:
         json.dump(default_config, config_file, indent=4, sort_keys=True)
     config_from_file = load_config()
     
-#Try to get a value from a config file. Return ... if key not founnd.
+#Try to get a value from a config file. Return ... if key not found.
 def tryConfig(key, config_from_file):
     try:
         return config_from_file[key]
     except:
-        config_file.close()
         config_from_file[key] = default_config[key] #add missing key with default value
         config_update = open(config_filepath, 'w')
         json.dump(config_from_file, config_update, indent = 4, sort_keys = True)
@@ -299,7 +298,8 @@ def menu_func_import(self, context):
 
 classes = (
             ImportE, 
-            ExportBin,MaterialPropertiesPanel, 
+            ExportBin,
+            MaterialPropertiesPanel, 
             ImportMaterialFromCustomProps, 
             OpenConfigFile, 
             BSPExportParams
