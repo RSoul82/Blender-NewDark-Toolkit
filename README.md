@@ -102,7 +102,7 @@ Check that Auto Save Preferences is eanbled. If not, use the Save button to reme
 </details>
 
 ## Setting Default Values
-There are several things to set up to allow the addon to work and be easy to use. In most cases it's clear which export option each varaible refers to, so this section just states valid values. All the options are all explained fully in the **Export** section of this readme.
+There are several things to set up to allow the addon to work and be easy to use. In most cases it's clear which export option each variable refers to, so this section just states valid values. All the options are all explained fully in the **Export** section of this readme.
 
 Once the addon has been enabled, go to your Blender addons folder (%Appdata%\Blender Foundation\Blender\[version number]\config\scripts) and open **Bin_Export.cfg**.
 
