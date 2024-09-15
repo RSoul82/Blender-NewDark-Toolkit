@@ -20,7 +20,7 @@
 
 # Script copyright (C) Tom N Harris
 # Contributors: Campbell Barton, Bob Holcomb, Richard Lärkäng, Damien McGinnes, Mark Stijnman
-# 2.80/2.9x/3.x Update by Robin Collier
+# 2.80/2.9x/3.x/4.x Update by Robin Collier
 
 ######################################################
 
@@ -44,6 +44,9 @@ else:
 #2.80 added this def:
 def get_diffuse_texture(material):
     mNodes = material.node_tree.nodes
+    
+    if material.filename_override:
+        return material.filename_override
 
     #get the material output node which all materials should have
     matOutputNode = mNodes.get("Material Output")
@@ -58,6 +61,10 @@ def get_diffuse_texture(material):
 
     except:
         return None
+
+def get_full_texture_path(textureNodeImageName):
+    img = bpy.data.images[textureNodeImageName]
+    return bpy.path.abspath(img.filepath)
 
 def get_material_colour(material):
     mNodes = material.node_tree.nodes
@@ -101,7 +108,9 @@ def make_material_str(i, material, image, operator, ai_mesh):
         #2.80 material.texture_slots no longer exists
         texture = get_diffuse_texture(material)
         if texture:
-            mat_str.append('TMAP "' + texture + '",0')
+            src_path = get_full_texture_path(texture)
+            filename = os.path.basename(src_path)
+            mat_str.append('TMAP "' + filename + '",0')
         else:
             mat_str.append(rgb_str)
 
@@ -282,7 +291,7 @@ def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep
             shutil.copy(binfile, obj_dir)
             if ai_mesh:
                 shutil.copy(calfile, obj_dir)
-            print(os.path.basename(binfile) + " file copied to obj folder of Thief game.")
+            print(os.path.basename(binfile) + " file copied to obj/mesh folder of Thief game.")
             if autodel:
                 os.remove(efile)
                 os.remove(binfile)
@@ -292,6 +301,9 @@ def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep
         except:
             print("\nERROR! I guess BIN file wasn't generated!")
             return 0
+    else:
+        if autodel:
+            os.remove(efile)
     return 1
 
 def copy_textures(materialDict, copyType, game_dir, ai_mesh):
@@ -303,8 +315,7 @@ def copy_textures(materialDict, copyType, game_dir, ai_mesh):
             if not bpy.data.materials[m[0]].nocopy:
                 tex = get_diffuse_texture(bpy.data.materials[m[0]])
                 if tex is not None:
-                    img = bpy.data.images[tex]
-                    src_path = bpy.path.abspath(img.filepath)
+                    src_path = get_full_texture_path(tex)
                     allowCopy = True
                     if copyType == 1: #only allow copying if dest does not exist
                         dest_file = os.path.join(txt16, os.path.basename(src_path))
@@ -339,7 +350,7 @@ def save(operator,
     import mathutils
 
     import time
-
+    #operator.report({'INFO'}, 'game_dir: ' + game_dir)
     '''Save the Blender scene to a E file.'''
 
     # Time the export
@@ -457,7 +468,7 @@ def save(operator,
     game_dir = game_dirs[int(game_dir_ID)]
 
     if os.path.exists(game_dir):
-        result = convert_to_bin(efile, filepath, calfile, wineprefix, bsp_dir, bsp_optimization, coplanar_limit, coplanar_limit, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params)
+        result = convert_to_bin(efile, filepath, calfile, wineprefix, bsp_dir, bsp_optimization, use_coplanar_limit, coplanar_limit, centering, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params)
         if result == 1:
             copy_textures(materialDict, int(tex_copy), game_dir, ai_mesh)
             print("Export & Conversion time: %.2f" % (time.time() - time1))
@@ -465,6 +476,6 @@ def save(operator,
         else:
             operator.report({'ERROR'}, 'Error writing BIN file!')
     else:
-        operator.report({'ERROR'}, 'Game dir does not exist')
+        operator.report({'ERROR'}, 'Game dir does not exist' + game_dir)
 
     return {'FINISHED'}

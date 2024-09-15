@@ -642,8 +642,8 @@ def axleCheck(verts):
 
 #values 0 and 100 are fine but values in between must be inverted
 def get_real_transp_value(transpValue):
-    print(type(transpValue))
-    print(transpValue)
+    #print(type(transpValue))
+    #print(transpValue)
     if transpValue > 0 and transpValue < 100:
         print(transpValue)
         return 100 - transpValue
@@ -654,6 +654,8 @@ def load(operator,
          context,
          filepath="",
          use_image_search=False,
+         black_tex_fix=False,
+         joint_plane_rgba=(0.0, 0.96, 0.0, 1.0),
          global_matrix=None,
          ):
 
@@ -701,8 +703,12 @@ def load(operator,
             #delete principled shader as it's not needed for dark enigne objects
             mNodes.remove(mNodes.get('Principled BSDF'))
             
-            #create diffuse shader
-            shaderNode = mNodes.new(type='ShaderNodeBsdfDiffuse')
+            #create a simple shader node, black_tex_fix can be set if user has texture display problems
+            if black_tex_fix:
+                shaderNode = mNodes.new(type='ShaderNodeEmission')
+            else:
+                shaderNode = mNodes.new(type='ShaderNodeBsdfDiffuse')
+            
             #get the material output node which all materials should have
             matOutputNode = mNodes.get("Material Output")
             
@@ -716,7 +722,10 @@ def load(operator,
             #create texture or RGB input
             if 'RGB' in mat:
                 col = [co / 255 for co in mat['RGB']]
-                shaderNode.inputs[0].default_value = (col[0],col[1],col[2],255)
+                if mat['NAME'] == 'Green':
+                    shaderNode.inputs[0].default_value = (joint_plane_rgba[0],joint_plane_rgba[1],joint_plane_rgba[2],255)
+                else:
+                    shaderNode.inputs[0].default_value = (col[0],col[1],col[2],255)
             if 'TMAP' in mat:
                 print("Loading image "+mat['TMAP']+" from "+dirname+"\n")
                 img = load_image_recursive(mat['TMAP'], dirname, use_image_search)
