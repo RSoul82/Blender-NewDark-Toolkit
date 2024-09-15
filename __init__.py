@@ -20,9 +20,9 @@
 
 bl_info = {
     'name': 'Blender NewDark Toolkit',
-    'author': 'Tom N Harris, 2.80/2.9x/3.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 5, 6),
-    'blender': (4, 0, 2),
+    'author': 'Tom N Harris, 2.80/2.9x/3.x/4.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
+    'version': (1, 6, 0),
+    'blender': (4, 1),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
 #    'wiki_url': '',
@@ -56,12 +56,15 @@ default_config = {
 'wineprefix': '$HOME/.wine',
 'autodel': False,
 'bin_copy': True,
-'tex_copy': 1
+'tex_copy': 1,
+'black_tex_fix_4.2': False,
+'joint_plane_rgba': (0.0, 0.96, 0.0, 1.0)
 }
 
 config_filename = 'Bin_Export.cfg'
 config_path = bpy.utils.user_resource('CONFIG', path='scripts', create=True)
 config_filepath = os.path.join(config_path, config_filename)
+game_dirs = []
 
 def load_config():
     with open(config_filepath, 'r') as config_file:
@@ -85,9 +88,15 @@ def tryConfig(key, config_from_file):
         config_update.close()
         load_config()
         return config_from_file[key]
+        
+def tryGetFMDir():
+    try:
+        return bpy.context.scene.fmDir
+    except:
+        return ''
 
 class ImportE(bpy.types.Operator, ImportHelper):
-    '''Import from E file format (.e)'''
+    """Import from E file format (.e)"""
     bl_idname = 'import_scene.efile'
     bl_label = 'Import E file'
 
@@ -96,6 +105,25 @@ class ImportE(bpy.types.Operator, ImportHelper):
 
     use_image_search: BoolProperty(name='Texture Search', description='Search subdirectories for any associated textures. Also searches the textures dir set in User Preferences.  (Warning, may be slow)', default=False)
 
+    version = bpy.app.version_file
+    major = version[0]
+    minor = version[1]
+ 
+    if major >= 4 and minor >= 2:
+        black_tex_fix: BoolProperty(name='Black Texture Workaround (4.2+)', 
+        description='For Blender version 4.2, some older graphics cards (maybe just AMD) cannot apply lighting to textures in "Material Preview" mode. If that affects you, select this setting to enable a workaround (uses an Emission shader instead of Diffuse)', 
+        default=tryConfig('black_tex_fix_4.2', config_from_file))
+
+    joint_plane_rgba: bpy.props.FloatVectorProperty(
+        name='Joint/Limit Plane Colour',
+        description='Choose your preferred colour for joints and limit places. Assumes these objects have a material name of "Green"',
+        subtype='COLOR',
+        size=4,
+        min=0.0,
+        max=1.0,
+        default=tryConfig('joint_plane_rgba', config_from_file)
+    )
+    
     axis_forward: EnumProperty(
             name='Forward',
             items=(('X', 'X Forward', ''),
@@ -131,62 +159,15 @@ class ImportE(bpy.types.Operator, ImportHelper):
         return import_e.load(self, context, **keywords)
 
 class ExportBin(bpy.types.Operator, ExportHelper):
-    '''Export to Bin file format (.bin)'''
+    """Export to Bin file format (.bin)"""
     bl_idname = 'export_scene.binfile'
     bl_label = 'Export Bin file'
     filename_ext = '.bin'
     filter_glob: StringProperty(default='*.bin', options={'HIDDEN'})
     bl_options = {'PRESET'}
-
-    use_selection: BoolProperty(name='Selection Only', description='Export selected objects only', default=False)
-    centering: BoolProperty(name='Center object', default=tryConfig('centering', config_from_file), 
-    description='Center your object near its centroid')
-    apply_modifiers: BoolProperty(name='Apply Modifiers', description='Apply modifiers to exported object.', default = True)
-    smooth_angle: IntProperty(name='Smooth Angle', min=0, max=360, step=1, description='Max angle between faces that should be smoothly shaded. Default: 120. Only applies to Phong/Gouraud materials', default=tryConfig('smooth_angle', config_from_file))
-    bsp_optimization: IntProperty(name='BSP Optimization', min=0, max=3, step=1, description='BSP Optimization levels (0 recommended)', default=0)
-    use_coplanar_limit: BoolProperty(name='Use Coplanar Limit', description='Disable this if you can see errors in your object\'s shape', default = True)
-    coplanar_limit: FloatProperty(name='Coplanar Limit', description='Change this if you get small gaps in the model or flattened faces', default = 1.0)
     
     wineprefix: StringProperty(default=tryConfig('wineprefix', config_from_file), name='Wine prefix', description='Wine prefix to use while executing BSP.exe and/or MeshBld.exe (Linux only)')
     bsp_dir: StringProperty(default=tryConfig('bsp_meshbld_dir', config_from_file), name='BSP/MeshBld Dir', description='Folder containing BSP.exe and/or MeshBld.exe')
-    
-    #generate game dirs list
-    gDirsString = tryConfig('game_dirs', config_from_file)
-    split = gDirsString.split(';')
-    enum_dirs = []
-    game_dirs = []
-    for i in range(0, len(split)):
-        enum_dirs.append((str(i), split[i].strip(), ''))
-        game_dirs.append(split[i].strip())
-    
-    game_dir_ID: EnumProperty(name='Game Dir', items = enum_dirs, description='Folder containing Thief/Thief2.exe, Dromed.exe, Shock2.exe etc')
-    bin_copy: BoolProperty(name='Bin Copy', default=tryConfig('bin_copy', config_from_file),
-    description='Copy model to obj subfolder')
-    autodel: BoolProperty(name='Delete temp files', default=tryConfig('autodel', config_from_file),
-    description='Delete local temporary files.')
-    tex_copy: EnumProperty(name='Copy Textures', items=(('0', 'Never', ''), ('1', 'Only if not present', ''), ('2', 'Always', '')), default='1',
-    description='Copy textures to obj\\txt16. Default = Only when texture isn\'t already in txt16')
-    ai_mesh: BoolProperty(name='AI Mesh', description='Use MeshBld and a .cal file (see below) to export to the mesh folder', default=False)
-    mesh_type: EnumProperty(
-            name='MeshType',
-            items=(('apparition', 'Apparation', ''),
-                   ('arm', 'Arm', ''),
-                   ('bowarm', 'Bow Arm', ''),
-                   ('bugbeast', 'Bug Beast', ''),
-                   ('burrick', 'Burrick', ''),
-                   ('constantine', 'Constantine', ''),
-                   ('crayman', 'Crayman', ''),
-                   ('deadburrick', 'Dead Burrick', ''),
-                   ('droid', 'Droid', ''),
-                   ('frog', 'Frog', ''),
-                   ('humanoid', 'Humanoid', ''),
-                   ('rope', 'Rope', ''),
-                   ('simple', 'Simple', ''),
-                   ('spider', 'Spider', ''),
-                   ('sweel', 'Sweel', ''),
-                   ),
-            default='humanoid',
-            )
     
     axis_forward: EnumProperty(
             name='Forward',
@@ -214,11 +195,22 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     
     def execute(self, context):
         from . import export_bin
-
         keywords = self.as_keywords(ignore=('axis_forward', 'axis_up', 'filter_glob', 'check_existing'))
         global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4()
         keywords['global_matrix'] = global_matrix
-        keywords['game_dirs'] = self.game_dirs #this is needed to get pass the array items to the export class
+        keywords['use_selection'] = context.scene.use_selection
+        keywords['apply_modifiers'] = context.scene.apply_modifiers
+        keywords['smooth_angle'] = context.scene.smooth_angle
+        keywords['bsp_optimization'] = context.scene.bsp_optimization
+        keywords['use_coplanar_limit'] = context.scene.use_coplanar_limit
+        keywords['coplanar_limit'] = context.scene.coplanar_limit
+        keywords['ai_mesh'] = context.scene.ai_mesh
+        keywords['mesh_type'] = context.scene.mesh_type
+        keywords['bin_copy'] = context.scene.bin_copy
+        keywords['game_dirs'] = game_dirs
+        keywords['game_dir_ID'] = context.scene.game_dir_ID
+        keywords['autodel'] = context.scene.autodel
+        keywords['tex_copy'] = context.scene.tex_copy
         keywords['extra_bsp_params'] = context.scene.bspParams
 
         return export_bin.save(self, context, **keywords)
@@ -241,13 +233,16 @@ class MaterialPropertiesPanel(bpy.types.Panel):
         layout.row().prop(activeMat, 'illum')
         layout.row().prop(activeMat, 'dbl')
         layout.row().prop(activeMat, 'nocopy')
+        layout.row().prop(activeMat, 'filename_override')
         layout.row().separator()
         layout.row().operator('material.import_from_custom', icon = 'MATERIAL')
 
 class ImportMaterialFromCustomProps(bpy.types.Operator):
+    """Old version of this addon used custom properties created by the user. Now obsolete. This function will search for them and apply their values to the above"""
     bl_idname = 'material.import_from_custom'
     bl_label = 'Import Materials from Custom Properties.'
     bl_options = {'REGISTER', 'UNDO'}
+    
     
     def execute(self, context):
         activeMat = get_active_mat(self, context)
@@ -269,17 +264,43 @@ class BSPExportParams(bpy.types.Panel):
     bl_idname = 'DE_BSPPANEL_PT_dark_engine_exporter'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
-    bl_context = 'object'
-    bl_label = 'BSP Export Params (NewDark Toolkit)'
+    bl_context = 'scene'
+    bl_label = 'Object Export Params (NewDark Toolkit)'
 
     def draw(self, context):
         layout = self.layout
-        layout.row().label(text='Additional BSP Params:')
+        col = layout.column()
+        row = col.row()
+        row.prop(context.scene, 'use_selection')
+        row.prop(context.scene, 'centering')
+        row.prop(context.scene, 'apply_modifiers')
+        layout.row().prop(context.scene, 'smooth_angle')
+        layout.row().prop(context.scene, 'bsp_optimization')
+        
+        col2 = layout.column()
+        row2 = col2.row()
+        row2.prop(context.scene, 'use_coplanar_limit')
+        if(context.scene.use_coplanar_limit):
+            row2.prop(context.scene, 'coplanar_limit')
+        
+        col3 = layout.column()
+        row3 = col3.row()
+        row3.prop(context.scene, 'ai_mesh')
+        if(context.scene.ai_mesh):
+            row3.prop(context.scene, 'mesh_type')
+        
+        layout.row().prop(context.scene, 'bin_copy')
+        if(context.scene.bin_copy):
+            layout.row().prop(context.scene, 'game_dir_ID')
+        
+        layout.row().prop(context.scene, 'tex_copy')
+        layout.row().prop(context.scene, 'autodel')
         layout.row().prop(context.scene, 'bspParams')
         layout.row().label(text='NOTE: Incorrect/duplicate params may cause conversion errors.')
         layout.row().operator('file.open_config', icon = 'SETTINGS')
         
 class OpenConfigFile(bpy.types.Operator):
+    """Open the config file to change the default values for this addon. Blender must be closed and restarted for the changes to take effect. Be careful with the file structure"""
     bl_idname = 'file.open_config'
     bl_label = 'Open Config File'
     bl_options = {'REGISTER', 'UNDO'}
@@ -309,7 +330,7 @@ def register():
     for c in classes:
         bpy.utils.register_class(c)
     
-    bpy.types.Material.shader = EnumProperty(name='Shader Type', description='Face/vertex brigtness type.',
+    bpy.types.Material.shader = EnumProperty(name='Shader Type', description='Face/vertex brightness type.',
         items = [ 
             ('PHONG', 'PHONG', 'Face brightness smoothly blended between brightness of each vertex. Smooth edges. [Note: true Phong is not supported by the Dark Engine, it will automatically use Gouraud.'), 
             ('GOURAUD', 'GOURAUD', 'Face brightness smoothly blended between brightness of each vertex. Smooth edges.'),
@@ -320,9 +341,54 @@ def register():
     bpy.types.Material.illum = IntProperty(name='Illumination', description='Material brightness. 0 = use natural lighting (default), 100 = fully illuminated', min=0, max=100, step=1)
     bpy.types.Material.dbl = BoolProperty(name='Double Sided', description='Draw material from front and back of face')
     bpy.types.Material.nocopy = BoolProperty(name='Do Not Copy Texture', description='Do not copy this texture when the object is exported. E.g. select this if the texture is orginally from a .crf file, or you don\'t want to overwrite it in txt16')
+    bpy.types.Material.filename_override = StringProperty(name='Filename Override', description='Use this if you have a complex material setup and the exporter cannot work out what texture to assign. TEXTURE MUST BE LOADED INTO THE SCENE')
     
-    #additional BSP params
-    bpy.types.Scene.bspParams = StringProperty(name='', description = 'Additional params for BSP file conversion. The addon already uses Infile, Outfile, Coplanar Limit (ep), Opt level (l), Verbose (V), Centering (o), and Smooth Angle (M), but it supports many more. Run BSP from the command prompt with no params to see the full list')
+    #export param property declarations
+    bpy.types.Scene.use_selection = BoolProperty(name='Selection Only', description='Export selected objects only', default=False)
+    bpy.types.Scene.centering = BoolProperty(name='Center object', default=tryConfig('centering', config_from_file), description='Center your object near its centroid')
+    bpy.types.Scene.apply_modifiers = BoolProperty(name='Apply Modifiers', description='Apply modifiers to exported object.', default = True)
+    bpy.types.Scene.smooth_angle = IntProperty(name='Smooth Angle', min=0, max=360, step=1, description='Max angle between faces that should be smoothly shaded. Default: 120. Only applies to Phong/Gouraud materials', default=tryConfig('smooth_angle', config_from_file))
+    bpy.types.Scene.bsp_optimization = IntProperty(name='BSP Optimization', min=0, max=3, step=1, description='BSP Optimization levels (0 recommended)', default=0)
+    bpy.types.Scene.use_coplanar_limit = BoolProperty(name='Use Coplanar Limit', description='Disable this if you can see errors in your object\'s shape', default = True)
+    bpy.types.Scene.coplanar_limit = FloatProperty(name='', description='Change this if you get small gaps in the model or flattened faces', default = 1.0)
+    bpy.types.Scene.bin_copy = BoolProperty(name='Bin Copy', default=tryConfig('bin_copy', config_from_file), description='Copy model to your FM\'s OBJ or MESH subfolder. Saves you having to find it each time you export this object')
+    
+    #generate game dirs list
+    gDirsString = tryConfig('game_dirs', config_from_file)
+    split = gDirsString.split(';')
+    enum_dirs = []
+    #game_dirs = []
+    for i in range(0, len(split)):
+       enum_dirs.append((str(i), split[i].strip(), ''))
+       game_dirs.append(split[i].strip())
+    
+    bpy.types.Scene.game_dir_ID = EnumProperty(name='FM/Game Folder Presets', items = enum_dirs, description='NewDark-style "FMs\..." folder, or folder containing Thief/Thief2.exe, Dromed.exe, Shock2.exe etc')
+    #bpy.types.Scene.fmDir = StringProperty(name='FM/Game Folder', description = 'FM Folder, or folder containing Thief/Thief2.exe, Dromed.exe, Shock2.exe etc. OBJ or MESH folders added automatically based on whether or not "AI Mesh" is selected')
+    bpy.types.Scene.autodel = BoolProperty(name='Delete temp files', default=tryConfig('autodel', config_from_file), description='Delete local temporary files. Only deletes bin/cal files if they files were copied to your OBJ or MESH folder. e file will be deleted regardless of copy option')
+    bpy.types.Scene.tex_copy = EnumProperty(name='Copy Textures', items=(('0', 'Never', ''), ('1', 'Only if not present', ''), ('2', 'Always', '')), default='1', description='Copy textures to obj (or mesh)\\txt16. Default = Only when texture isn\'t already in txt16')
+    bpy.types.Scene.ai_mesh = BoolProperty(name='AI Mesh', description='Use MeshBld and a .cal file (see the menu on the right) to export to the mesh folder', default=False)
+    bpy.types.Scene.mesh_type = EnumProperty(
+            name='Type',
+            items=(('apparition', 'Apparation', ''),
+                   ('arm', 'Arm', ''),
+                   ('bowarm', 'Bow Arm', ''),
+                   ('bugbeast', 'Bug Beast', ''),
+                   ('burrick', 'Burrick', ''),
+                   ('constantine', 'Constantine', ''),
+                   ('crayman', 'Crayman', ''),
+                   ('deadburrick', 'Dead Burrick', ''),
+                   ('droid', 'Droid', ''),
+                   ('frog', 'Frog', ''),
+                   ('humanoid', 'Humanoid', ''),
+                   ('rope', 'Rope', ''),
+                   ('simple', 'Simple', ''),
+                   ('spider', 'Spider', ''),
+                   ('sweel', 'Sweel', ''),
+                   ),
+            default='humanoid',
+            )
+    
+    bpy.types.Scene.bspParams = StringProperty(name='Extra BSP Params', description = 'Additional params for BSP file conversion. The addon already uses Infile, Outfile, Coplanar Limit (ep), Opt level (l), Verbose (V), Centering (o), and Smooth Angle (M), but it supports many more. Run BSP from the command prompt with no params to see the full list')
     
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
