@@ -21,7 +21,7 @@
 bl_info = {
     'name': 'Blender NewDark Toolkit',
     'author': 'Tom N Harris, 2.80/2.9x/3.x/4.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 6, 0),
+    'version': (1, 6, 1),
     'blender': (4, 1),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
@@ -199,6 +199,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
         global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4()
         keywords['global_matrix'] = global_matrix
         keywords['use_selection'] = context.scene.use_selection
+        keywords['centering'] = context.scene.centering
         keywords['apply_modifiers'] = context.scene.apply_modifiers
         keywords['smooth_angle'] = context.scene.smooth_angle
         keywords['bsp_optimization'] = context.scene.bsp_optimization
