@@ -27,6 +27,7 @@
 import bpy
 import os
 import shutil
+import time
 
 from math import cos, radians
 
@@ -214,7 +215,7 @@ def get_args(mesh_type, dir):
     print("dir: " + dir)
     args = {
     "apparition": "\"" + os.path.join(dir, "appa.map") + "\" -m\"" + os.path.join(dir, "appa.mjo") + "\" -V",
-    "arm": "\"" + os.path.join(dir, "arm.map") + "\" -m\"" + os.path.join(dir, "arm.mjo") + "\" -V",
+    "arm": "\"" + os.path.join(dir, "playarm.map") + "\" -m\"" + os.path.join(dir, "playarm.mjo") + "\" -V",
     "bowarm": "\"" + os.path.join(dir, "flexbow.map") + "\" -m\"" + os.path.join(dir, "flexbow.mjo") + "\" -V",
     "bugbeast": "\"" + os.path.join(dir, "bugbeast.map") + "\" -m\"" + os.path.join(dir, "bugbeast.mjo") + "\" -c\"" + os.path.join(dir, "manbase.cal") + "\" -V",
     "burrick": "\"" + os.path.join(dir, "burrick.map") + "\" -m\"" + os.path.join(dir, "burrick.mjo") + "\" -c\"" + os.path.join(dir, "burrbase.cal") + "\" -V",
@@ -235,6 +236,9 @@ def get_args(mesh_type, dir):
 def calc_smooth_threshold(smooth_angle):
     rad_angle = radians(smooth_angle)
     return round(cos(rad_angle), 6)
+    
+def remove_v1_mesh(binfile):
+    os.remove(binfile)
 
 def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params):
     bsp = os.path.join(bsp_dir, "BSP")
@@ -256,7 +260,7 @@ def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep
     else:
         arg_string = get_args(mesh_type, bsp_dir)
         v2mesh = binfile.replace(".bin", "2.bin")
-        if os.name == 'posix':
+        if os.name == "posix":
             #assumes user has not changed wine's default drive mappings
             command = "\"" + mshbld + "\" \"Z:\\" + efile + "\" \"Z:\\" + binfile + "\" " + arg_string
             meshUpCmd = "\"" + meshUp + "\" \"Z:\\" + binfile + "\" \"Z:\\" + v2mesh + "\""
@@ -265,22 +269,23 @@ def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep
             meshUpCmd = "\"" + meshUp + "\" \"" + binfile + "\" \"" + v2mesh + "\""
     print("Converting to .bin...")
     print(command)
-    if os.name == 'posix':
-        os.environ['WINEPREFIX'] = wineprefix
-        os.system('wine ' + command) #basic object conversion command
+
+    if os.name == "posix":
+        os.environ["WINEPREFIX"] = wineprefix
+        os.system("wine " + command) #basic object conversion command
     else:
-        os.system('call ' + command) #basic object conversion command
+        os.system("call " + command) #basic object conversion command
 
     if ai_mesh:
         if os.path.isfile(meshUp + ".exe"):
-            if os.name == 'posix':
-                os.system('wine ' + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
+            if os.name == "posix":
+                os.system("wine " + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
                 os.remove(binfile) #remove original bin file
-                os.system('mv ' + v2mesh + ' ' + os.path.basename(v2mesh).replace("2.bin", ".bin")) #rename new bin file to original filename
+                os.system("mv " + v2mesh + " " + os.path.basename(v2mesh).replace("2.bin", ".bin")) #rename new bin file to original filename
             else:
-                os.system('call ' + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
+                os.system("call " + meshUpCmd) #convert to v2 mesh to support material illum etc. New bin file created (program will not overwrite)
                 os.remove(binfile) #remove original bin file
-                os.system('call rename ' + v2mesh + ' ' + os.path.basename(v2mesh).replace("2.bin", ".bin")) #rename new bin file to original filename
+                os.system("call ren " + "\"" + v2mesh + "\" " + "\"" + os.path.basename(v2mesh).replace("2.bin", ".bin") + "\"") #rename new bin file to original filename
     if bin_copy:
         obj_dir = os.path.join(game_dir, "obj")
         if ai_mesh:
