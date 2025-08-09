@@ -27,7 +27,6 @@
 import bpy
 import os
 import shutil
-import time
 
 from math import cos, radians
 
@@ -236,9 +235,6 @@ def get_args(mesh_type, dir):
 def calc_smooth_threshold(smooth_angle):
     rad_angle = radians(smooth_angle)
     return round(cos(rad_angle), 6)
-    
-def remove_v1_mesh(binfile):
-    os.remove(binfile)
 
 def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params):
     bsp = os.path.join(bsp_dir, "BSP")
