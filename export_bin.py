@@ -237,9 +237,9 @@ def calc_smooth_threshold(smooth_angle):
     return round(cos(rad_angle), 6)
 
 def convert_to_bin(efile, binfile, calfile, wineprefix, bsp_dir, opt, use_ep, ep, centre, bin_copy, game_dir, autodel, ai_mesh, mesh_type, smooth_angle, extra_bsp_params):
-    bsp = os.path.join(bsp_dir, "BSP")
-    mshbld = os.path.join(bsp_dir, "MESHBLD")
-    meshUp = os.path.join(bsp_dir, "MeshUp")
+    bsp = os.path.join(bsp_dir, "BSP.exe")
+    mshbld = os.path.join(bsp_dir, "MESHBLD.exe")
+    meshUp = os.path.join(bsp_dir, "MeshUp.exe")
     centString = ""
     epString = ""
     smooth_threshold = str(calc_smooth_threshold(smooth_angle))
@@ -329,6 +329,29 @@ def copy_textures(materialDict, copyType, game_dir, ai_mesh):
                         print("copying " + src_path + " to " + txt16)
                         shutil.copy(src_path, txt16)
 
+def object_not_axle(ob):
+    if not ob.name.startswith("@x") and not ob.name.startswith("@z"):
+        return True
+    else:
+        return False
+
+def generate_material_data(unique_materials):
+    materialDict = {}
+    for material in unique_materials:
+        if(material.use_nodes):
+            mName = material.name
+            texName = get_diffuse_texture(material)
+            if texName is not None:
+                texImage = bpy.data.images[texName]
+            else:
+                texImage = None
+            
+            materialDict.setdefault((mName, texName), (len(materialDict)+1, material, texImage))
+        else:
+            operator.report({'ERROR'}, "Error: material \"" + material.name + "\" does not use nodes. Basic node setup required.")
+            return{'CANCELLED'}
+    return materialDict
+
 def save(operator,
          context, filepath="",
          use_selection=True,
@@ -374,10 +397,8 @@ def save(operator,
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    # Make a list of all materials used in the selected meshes (use a dictionary,
-    # each material is added once):
-    materialDict = {}
     mesh_objects = []
+    unique_materials = []
 
     scene = context.scene
     depsgraph = context.evaluated_depsgraph_get()
@@ -404,26 +425,23 @@ def save(operator,
         if data:
             data.transform(global_matrix @ mat)
             mesh_objects.append((ob_for_convert, data))
-            mat_ls = data.materials
-            mat_ls_len = len(mat_ls)
+            cur_obj_material_list = data.materials
+            mat_list_length = len(cur_obj_material_list)
             
-            if mat_ls_len:
+            if mat_list_length:
                 for p in data.polygons:
                     material = data.materials[p.material_index]
-                    mName = material.name
-                    texName = get_diffuse_texture(material)
-                    if texName is not None:
-                        texImage = bpy.data.images[texName]
-                    else:
-                        texImage = None
-                    
-                    materialDict.setdefault((mName, texName), (len(materialDict)+1, material, texImage))
+                    if not material in unique_materials:
+                        unique_materials.append(material)
+                        
             else:
-                if not ob.name.startswith("@x") and not ob.name.startswith("@z"):
+                if object_not_axle(ob):
                     eMsg = "\"" + ob.name + "\" has no materials."
                     print(eMsg)
                     operator.report({'ERROR'}, ob.name + " has no materials.")
                     return{'CANCELLED'}
+    
+    materialDict = generate_material_data(unique_materials)
     
     # Make material chunks for all materials used in the meshes:
     file.write("MATERIALS{\n")
