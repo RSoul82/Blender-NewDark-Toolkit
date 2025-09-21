@@ -21,7 +21,7 @@
 bl_info = {
     'name': 'Blender NewDark Toolkit',
     'author': 'Tom N Harris, 2.80/2.9x/3.x/4.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 6, 2),
+    'version': (1, 6, 3),
     'blender': (4, 1),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
@@ -42,6 +42,7 @@ if 'bpy' in locals():
 import bpy
 import os
 import json
+from . import utils
 from bpy.props import StringProperty, FloatProperty, BoolProperty, EnumProperty, IntProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
 
@@ -307,7 +308,7 @@ class OpenConfigFile(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     def execute(self, context):
-        os.startfile(config_filepath)
+        utils.open_file(config_filepath)
         return {'FINISHED'}
     
 
