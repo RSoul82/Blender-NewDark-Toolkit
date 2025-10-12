@@ -21,7 +21,7 @@
 bl_info = {
     'name': 'Blender NewDark Toolkit',
     'author': 'Tom N Harris, 2.80/2.9x/3.x/4.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 6, 3),
+    'version': (1, 6, 4),
     'blender': (4, 1),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
@@ -54,7 +54,7 @@ default_config = {
 'smooth_angle': 89,
 'game_dirs': 'C:\\Games\\Thief2',
 'bsp_meshbld_dir': 'C:\\some\\path\\to\\folder\\containing\\BSP and meshbld etc',
-'wineprefix': '$HOME/.wine',
+'wineprefix': os.getenv('HOME') + '/.wine',
 'autodel': False,
 'bin_copy': True,
 'tex_copy': 1,
@@ -77,17 +77,20 @@ except IOError:
     with open(config_filepath, 'w') as config_file:
         json.dump(default_config, config_file, indent=4, sort_keys=True)
     config_from_file = load_config()
+
+def addDefaultValueToConfigFile(keyToSet):
+    config_from_file[keyToSet] = default_config[keyToSet] #add missing key with default value
+    config_update = open(config_filepath, 'w')
+    json.dump(config_from_file, config_update, indent = 4, sort_keys = True)
+    config_update.close()
+    load_config()
     
-#Try to get a value from a config file. Return ... if key not found.
+#Try to get a value from a config file. If key not found, set default value then return that.
 def tryConfig(key, config_from_file):
     try:
         return config_from_file[key]
     except:
-        config_from_file[key] = default_config[key] #add missing key with default value
-        config_update = open(config_filepath, 'w')
-        json.dump(config_from_file, config_update, indent = 4, sort_keys = True)
-        config_update.close()
-        load_config()
+        addDefaultValueToConfigFile(key)    
         return config_from_file[key]
         
 def tryGetFMDir():
@@ -166,7 +169,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
     filename_ext = '.bin'
     filter_glob: StringProperty(default='*.bin', options={'HIDDEN'})
     bl_options = {'PRESET'}
-    
+        
     wineprefix: StringProperty(default=tryConfig('wineprefix', config_from_file), name='Wine prefix', description='Wine prefix to use while executing BSP.exe and/or MeshBld.exe (Linux only)')
     bsp_dir: StringProperty(default=tryConfig('bsp_meshbld_dir', config_from_file), name='BSP/MeshBld Dir', description='Folder containing BSP.exe and/or MeshBld.exe')
     
@@ -244,7 +247,6 @@ class ImportMaterialFromCustomProps(bpy.types.Operator):
     bl_idname = 'material.import_from_custom'
     bl_label = 'Import Materials from Custom Properties.'
     bl_options = {'REGISTER', 'UNDO'}
-    
     
     def execute(self, context):
         activeMat = get_active_mat(self, context)
@@ -328,6 +330,11 @@ classes = (
             BSPExportParams
             )
 
+def replaceStringLiteralWinePrefixWithValueFromOS():
+    existingWinePrefix = tryConfig('wineprefix', config_from_file)
+    if existingWinePrefix == '$HOME/.wine':
+        addDefaultValueToConfigFile('wineprefix')
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
@@ -350,7 +357,7 @@ def register():
     bpy.types.Scene.centering = BoolProperty(name='Center object', default=tryConfig('centering', config_from_file), description='Center your object near its centroid')
     bpy.types.Scene.apply_modifiers = BoolProperty(name='Apply Modifiers', description='Apply modifiers to exported object.', default = True)
     bpy.types.Scene.smooth_angle = IntProperty(name='Smooth Angle', min=0, max=360, step=1, description='Max angle between faces that should be smoothly shaded. Default: 120. Only applies to Phong/Gouraud materials', default=tryConfig('smooth_angle', config_from_file))
-    bpy.types.Scene.bsp_optimization = IntProperty(name='BSP Optimization', min=0, max=3, step=1, description='BSP Optimization levels (0 recommended)', default=0)
+    bpy.types.Scene.bsp_optimization = IntProperty(name='BSP Optimization', min=0, max=3, step=1, description='BSP Optimization levels (0: Cleanest model, opaque/alpha keyed materials only, 3: Messy triangles, but required for transparent materials)', default=0)
     bpy.types.Scene.use_coplanar_limit = BoolProperty(name='Use Coplanar Limit', description='Disable this if you can see errors in your object\'s shape', default = True)
     bpy.types.Scene.coplanar_limit = FloatProperty(name='', description='Change this if you get small gaps in the model or flattened faces', default = 1.0)
     bpy.types.Scene.bin_copy = BoolProperty(name='Bin Copy', default=tryConfig('bin_copy', config_from_file), description='Copy model to your FM\'s OBJ or MESH subfolder. Saves you having to find it each time you export this object')
@@ -394,7 +401,8 @@ def register():
     
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
-    #2.80: TOPBAR_MT was INFO_MT
+    
+    replaceStringLiteralWinePrefixWithValueFromOS()
 
 def unregister():
     for c in classes:
@@ -402,7 +410,6 @@ def unregister():
 
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
-    #2.80: TOPBAR_MT was INFO_MT
 
 # NOTES:
 # why add 1 extra vertex? and remove it when done? - 'Answer - eekadoodle - would need to re-order UV's without this since face order isnt always what we give blender, BMesh will solve :D'
