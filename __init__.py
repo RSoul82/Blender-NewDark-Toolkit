@@ -20,9 +20,9 @@
 
 bl_info = {
     'name': 'Blender NewDark Toolkit',
-    'author': 'Tom N Harris, 2.80/2.9x/3.x/4.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
-    'version': (1, 6, 4),
-    'blender': (4, 1),
+    'author': 'Tom N Harris, 4.x/5.x update by Robin Collier, including adaptions from the Dark Exporter 2 by Elendir',
+    'version': (1, 6, 5),
+    'blender': (5, 0),
     'location': 'File > Import-Export',
     'description': 'Import E files, Export Bin, including textures',
 #    'wiki_url': '',
@@ -42,6 +42,7 @@ if 'bpy' in locals():
 import bpy
 import os
 import json
+import re
 from . import utils
 from bpy.props import StringProperty, FloatProperty, BoolProperty, EnumProperty, IntProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper, axis_conversion
@@ -54,7 +55,7 @@ default_config = {
 'smooth_angle': 89,
 'game_dirs': 'C:\\Games\\Thief2',
 'bsp_meshbld_dir': 'C:\\some\\path\\to\\folder\\containing\\BSP and meshbld etc',
-'wineprefix': os.getenv('HOME') + '/.wine',
+'wineprefix': os.getenv('HOME') + '/.wine' if os.name == 'posix' else 'null',
 'autodel': False,
 'bin_copy': True,
 'tex_copy': 1,
@@ -196,12 +197,30 @@ class ExportBin(bpy.types.Operator, ExportHelper):
                    ),
             default='Z',
             )
-    
+
+    previous_export_filepath: StringProperty(
+        default = 'Untitled',
+        options={'HIDDEN'},
+    )
+
+    def invoke(self, context, _event):
+        if not bpy.data.filepath == '':
+            self.previous_export_filepath = bpy.data.filepath
+        if context.scene.use_blender_obj_name:
+            current_obj_name = re.sub(r'[^\w\d-]','_',context.active_object.name) # makes filename safe, invalid chars replaced with _
+            self.filepath = current_obj_name + self.filename_ext
+            context.window_manager.fileselect_add(self)
+        else:
+            self.filepath = self.previous_export_filepath
+            context.window_manager.fileselect_add(self)
+        return{'RUNNING_MODAL'}
+       
     def execute(self, context):
         from . import export_bin
         keywords = self.as_keywords(ignore=('axis_forward', 'axis_up', 'filter_glob', 'check_existing'))
-        global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4()
-        keywords['global_matrix'] = global_matrix
+        global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4()        
+        keywords['global_matrix'] = global_matrix              
+        keywords['batch_mode'] = self.batch_mode
         keywords['use_selection'] = context.scene.use_selection
         keywords['centering'] = context.scene.centering
         keywords['apply_modifiers'] = context.scene.apply_modifiers
@@ -218,6 +237,8 @@ class ExportBin(bpy.types.Operator, ExportHelper):
         keywords['tex_copy'] = context.scene.tex_copy
         keywords['extra_bsp_params'] = context.scene.bspParams
 
+        self.previous_export_filepath = self.filepath
+   
         return export_bin.save(self, context, **keywords)
 
 def get_active_mat(self, context):
@@ -233,14 +254,14 @@ class MaterialPropertiesPanel(bpy.types.Panel):
     def draw(self, context):
         activeMat = get_active_mat(self, context)
         layout = self.layout
-        layout.row().prop(activeMat, 'shader')
-        layout.row().prop(activeMat, 'transp')
-        layout.row().prop(activeMat, 'illum')
-        layout.row().prop(activeMat, 'dbl')
-        layout.row().prop(activeMat, 'nocopy')
-        layout.row().prop(activeMat, 'filename_override')
-        layout.row().separator()
-        layout.row().operator('material.import_from_custom', icon = 'MATERIAL')
+        layout.prop(activeMat, 'shader')
+        layout.prop(activeMat, 'transp')
+        layout.prop(activeMat, 'illum')
+        layout.prop(activeMat, 'dbl')
+        layout.prop(activeMat, 'nocopy')
+        layout.prop(activeMat, 'filename_override')
+        layout.separator()
+        layout.operator('material.import_from_custom', icon = 'MATERIAL')
 
 class ImportMaterialFromCustomProps(bpy.types.Operator):
     """Old version of this addon used custom properties created by the user. Now obsolete. This function will search for them and apply their values to the above"""
@@ -273,35 +294,37 @@ class BSPExportParams(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        col = layout.column()
-        row = col.row()
-        row.prop(context.scene, 'use_selection')
-        row.prop(context.scene, 'centering')
-        row.prop(context.scene, 'apply_modifiers')
-        layout.row().prop(context.scene, 'smooth_angle')
-        layout.row().prop(context.scene, 'bsp_optimization')
         
-        col2 = layout.column()
-        row2 = col2.row()
+        layout.prop(context.scene, 'use_blender_obj_name')        
+
+        row1 = layout.row()
+        row1.prop(context.scene, 'use_selection')
+        row1.prop(context.scene, 'centering')
+        row1.prop(context.scene, 'apply_modifiers')
+
+        layout.prop(context.scene, 'smooth_angle')
+        layout.prop(context.scene, 'bsp_optimization')
+        
+        row2 = layout.row()
         row2.prop(context.scene, 'use_coplanar_limit')
         if(context.scene.use_coplanar_limit):
             row2.prop(context.scene, 'coplanar_limit')
         
-        col3 = layout.column()
-        row3 = col3.row()
+        row3 = layout.row()
         row3.prop(context.scene, 'ai_mesh')
         if(context.scene.ai_mesh):
             row3.prop(context.scene, 'mesh_type')
         
-        layout.row().prop(context.scene, 'bin_copy')
+        layout.prop(context.scene, 'bin_copy')
         if(context.scene.bin_copy):
-            layout.row().prop(context.scene, 'game_dir_ID')
+            layout.prop(context.scene, 'game_dir_ID')
         
-        layout.row().prop(context.scene, 'tex_copy')
-        layout.row().prop(context.scene, 'autodel')
-        layout.row().prop(context.scene, 'bspParams')
-        layout.row().label(text='NOTE: Incorrect/duplicate params may cause conversion errors.')
-        layout.row().operator('file.open_config', icon = 'SETTINGS')
+        layout.prop(context.scene, 'tex_copy')
+        layout.prop(context.scene, 'autodel')
+        layout.prop(context.scene, 'bspParams')
+        layout.label(text='NOTE: Incorrect/duplicate params may cause conversion errors.')
+        layout.separator()        
+        layout.operator('file.open_config', icon = 'SETTINGS')
         
 class OpenConfigFile(bpy.types.Operator):
     """Open the config file to change the default values for this addon. Blender must be closed and restarted for the changes to take effect. Be careful with the file structure"""
@@ -353,6 +376,7 @@ def register():
     bpy.types.Material.filename_override = StringProperty(name='Filename Override', description='Use this if you have a complex material setup and the exporter cannot work out what texture to assign. TEXTURE MUST BE LOADED INTO THE SCENE')
     
     #export param property declarations
+    bpy.types.Scene.use_blender_obj_name = BoolProperty(name='Use Blender Object Name', description='Set .bin filename from Object name (NOTE: replaces dots with underscores)', default=False) 
     bpy.types.Scene.use_selection = BoolProperty(name='Selection Only', description='Export selected objects only', default=False)
     bpy.types.Scene.centering = BoolProperty(name='Center object', default=tryConfig('centering', config_from_file), description='Center your object near its centroid')
     bpy.types.Scene.apply_modifiers = BoolProperty(name='Apply Modifiers', description='Apply modifiers to exported object.', default = True)
