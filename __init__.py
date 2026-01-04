@@ -200,7 +200,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
 
     previous_export_filepath: StringProperty(
         default = 'Untitled',
-        options={'HIDDEN'},
+        #options={'HIDDEN'},
     )
 
     def invoke(self, context, _event):
@@ -211,16 +211,14 @@ class ExportBin(bpy.types.Operator, ExportHelper):
             self.filepath = current_obj_name + self.filename_ext
             context.window_manager.fileselect_add(self)
         else:
-            self.filepath = self.previous_export_filepath
             context.window_manager.fileselect_add(self)
         return{'RUNNING_MODAL'}
-       
+   
     def execute(self, context):
         from . import export_bin
-        keywords = self.as_keywords(ignore=('axis_forward', 'axis_up', 'filter_glob', 'check_existing'))
+        keywords = self.as_keywords(ignore=('axis_forward', 'axis_up', 'filter_glob', 'check_existing', 'previous_export_filepath'))
         global_matrix = axis_conversion(to_forward=self.axis_forward, to_up=self.axis_up).to_4x4()        
         keywords['global_matrix'] = global_matrix              
-        keywords['batch_mode'] = self.batch_mode
         keywords['use_selection'] = context.scene.use_selection
         keywords['centering'] = context.scene.centering
         keywords['apply_modifiers'] = context.scene.apply_modifiers
