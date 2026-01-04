@@ -200,7 +200,7 @@ class ExportBin(bpy.types.Operator, ExportHelper):
 
     previous_export_filepath: StringProperty(
         default = 'Untitled',
-        #options={'HIDDEN'},
+        options={'HIDDEN'},
     )
 
     def invoke(self, context, _event):
